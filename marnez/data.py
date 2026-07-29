@@ -200,7 +200,7 @@ TESTIMONIOS = [
 
 CERTIFICACIONES = [
     {"texto": "Protección jurídica patrimonial", "logo": None},
-    {"texto": "Escrituración inmediata", "logo": "brand/escrituracion.png"},
+    {"texto": "Escrituración inmediata", "logo": "icons/escrituracion.png"},
     {"texto": "Programa de referidos", "logo": None},
     {"texto": "Cumplimiento normativo PROFECO", "logo": None},
 ]
@@ -268,7 +268,8 @@ _AMENITY_ICON_KEYWORDS = [
     (("comercial",), "shop"),
     (("semi urbaniz", "etapa"), "crane"),
     (("privada", "disponible"), "flag"),
-    (("profeco", "contrato", "escritura"), "doc"),
+    (("escritura", "escritur"), "escrituracion"),
+    (("profeco", "contrato"), "doc"),
 ]
 
 
