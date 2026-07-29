@@ -42,7 +42,15 @@ def create_app(config_class=Config):
 
     @app.context_processor
     def inject_globals():
-        return {"empresa": app.config["EMPRESA"], "now_year": datetime.now(UTC).year}
+        from .models import AjustesComercial
+
+        defaults = app.config["EMPRESA"]
+        try:
+            ajustes = AjustesComercial.get_or_create(defaults=defaults)
+            empresa = ajustes.as_empresa_dict(defaults)
+        except Exception:
+            empresa = defaults
+        return {"empresa": empresa, "now_year": datetime.now(UTC).year}
 
     from .data import amenity_icon_key
     from .media import blog_img_url, desarrollo_img_url, video_url

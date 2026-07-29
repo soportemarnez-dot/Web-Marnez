@@ -5,6 +5,7 @@ from flask import (
     redirect,
     url_for,
     flash,
+    current_app,
 )
 from flask_login import login_user, logout_user, current_user
 from werkzeug.datastructures import MultiDict
@@ -15,6 +16,7 @@ from ..models import (
     BlogPost,
     Desarrollo,
     DesarrolloImagen,
+    AjustesComercial,
     ROL_COMERCIAL,
 )
 from ..auth import require_rol, gestionar_cuenta
@@ -72,6 +74,59 @@ def panel():
 @require_rol(ROL_COMERCIAL)
 def cuenta():
     return gestionar_cuenta(ROL_COMERCIAL, "comercial/cuenta.html", "comercial.cuenta")
+
+
+@comercial_bp.route("/contacto", methods=["GET", "POST"])
+@require_rol(ROL_COMERCIAL)
+def contacto_ajustes():
+    """Teléfono, correo, oficinas, WhatsApp y correos de cotización."""
+    ajustes = AjustesComercial.get_or_create(defaults=current_app.config.get("EMPRESA"))
+    if request.method == "POST":
+        telefono = request.form.get("telefono", "").strip()
+        email = request.form.get("email", "").strip()
+        direccion = request.form.get("direccion", "").strip()
+        mapa_query = request.form.get("mapa_query", "").strip()
+        whatsapp_raw = request.form.get("whatsapp", "").strip()
+        digits = "".join(ch for ch in whatsapp_raw if ch.isdigit())
+
+        c1 = request.form.get("correo_1", "").strip()
+        c2 = request.form.get("correo_2", "").strip()
+        c3 = request.form.get("correo_3", "").strip()
+        errores = []
+        if not telefono:
+            errores.append("El teléfono público es obligatorio.")
+        if not email or "@" not in email:
+            errores.append("El correo público debe ser válido.")
+        if not digits or len(digits) < 10:
+            errores.append("Indica un número de WhatsApp válido (con lada país, ej. 529902293374).")
+        llenos = [c for c in (c1, c2, c3) if c]
+        if not llenos:
+            errores.append("Indica al menos un correo para recibir cotizaciones / contacto.")
+        for c in llenos:
+            if "@" not in c:
+                errores.append(f"Correo inválido: {c}")
+        if errores:
+            for e in errores:
+                flash(e, "danger")
+            return render_template("comercial/contacto.html", a=ajustes, form=request.form), 400
+
+        ajustes.telefono = telefono
+        ajustes.email = email
+        ajustes.direccion = direccion or None
+        ajustes.mapa_query = mapa_query or None
+        ajustes.whatsapp = digits
+        ajustes.facebook = request.form.get("facebook", "").strip() or None
+        ajustes.instagram = request.form.get("instagram", "").strip() or None
+        ajustes.linkedin = request.form.get("linkedin", "").strip() or None
+        ajustes.tiktok = request.form.get("tiktok", "").strip() or None
+        ajustes.correo_1 = c1 or None
+        ajustes.correo_2 = c2 or None
+        ajustes.correo_3 = c3 or None
+        db.session.commit()
+        flash("Datos de contacto y correos de cotización actualizados.", "success")
+        return redirect(url_for("comercial.contacto_ajustes"))
+
+    return render_template("comercial/contacto.html", a=ajustes, form=MultiDict())
 
 
 # ------------------------------------------------------------------ blogs --

@@ -11,16 +11,37 @@ from flask import current_app, url_for
 logger = logging.getLogger(__name__)
 
 
+def enviar_email_resend(*, to: list[str], subject: str, html: str, attachments: list | None = None) -> bool:
+    if not to:
+        return False
+    api_key = current_app.config.get("RESEND_API_KEY") or ""
+    from_addr = current_app.config.get("RESEND_FROM") or ""
+    if not api_key or not from_addr:
+        logger.warning("Resend no configurado; omitiendo email.")
+        return False
+    try:
+        import resend
+
+        resend.api_key = api_key
+        params: dict = {
+            "from": from_addr,
+            "to": to[:3],
+            "subject": subject,
+            "html": html,
+        }
+        if attachments:
+            params["attachments"] = attachments
+        resend.Emails.send(params)
+        return True
+    except Exception:
+        logger.exception("Error enviando email Resend: %s", subject)
+        return False
+
+
 def enviar_notificacion_postulacion(postulacion, destinos: list[str], vacante=None) -> bool:
     """Envía aviso a Capital Humano. No lanza; retorna True si al menos un envío ok."""
     if not destinos:
         logger.info("Postulación %s sin correos destino; solo queda en panel.", postulacion.id)
-        return False
-
-    api_key = current_app.config.get("RESEND_API_KEY") or ""
-    from_addr = current_app.config.get("RESEND_FROM") or ""
-    if not api_key or not from_addr:
-        logger.warning("Resend no configurado (RESEND_API_KEY / RESEND_FROM); omitiendo email.")
         return False
 
     puesto = (
@@ -58,21 +79,27 @@ def enviar_notificacion_postulacion(postulacion, destinos: list[str], vacante=No
             }
         )
 
-    try:
-        import resend
-
-        resend.api_key = api_key
-        params: dict = {
-            "from": from_addr,
-            "to": destinos[:3],
-            "subject": subject,
-            "html": html,
-        }
-        if attachments:
-            params["attachments"] = attachments
-        resend.Emails.send(params)
+    ok = enviar_email_resend(to=destinos, subject=subject, html=html, attachments=attachments or None)
+    if ok:
         logger.info("Notificación de postulación %s enviada a %s", postulacion.id, destinos)
-        return True
-    except Exception:
-        logger.exception("Error enviando notificación de postulación %s", postulacion.id)
+    return ok
+
+
+def enviar_notificacion_lead(lead, destinos: list[str]) -> bool:
+    """Aviso de formulario de contacto / cotización a Comercial."""
+    if not destinos:
+        logger.info("Lead %s sin correos destino; solo queda en BD.", lead.id)
         return False
+    subject = f"Nueva solicitud de contacto — {lead.nombre}"
+    html = f"""
+    <h2>Nueva solicitud de contacto / cotización</h2>
+    <p><strong>Nombre:</strong> {lead.nombre}</p>
+    <p><strong>Correo:</strong> {lead.email}</p>
+    <p><strong>Teléfono:</strong> {lead.telefono}</p>
+    <p><strong>Desarrollo de interés:</strong> {lead.desarrollo_interes or 'No especificado'}</p>
+    <p><strong>Mensaje:</strong><br>{(lead.mensaje or '—').replace(chr(10), '<br>')}</p>
+    """
+    ok = enviar_email_resend(to=destinos, subject=subject, html=html)
+    if ok:
+        logger.info("Notificación de lead %s enviada a %s", lead.id, destinos)
+    return ok

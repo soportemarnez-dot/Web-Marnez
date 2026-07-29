@@ -9,6 +9,7 @@ from sqlalchemy import inspect, text
 from .extensions import db
 from .models import (
     AjustesHR,
+    AjustesComercial,
     BlogPost,
     Desarrollo,
     DesarrolloImagen,
@@ -103,6 +104,7 @@ def seed_admins(app) -> None:
             db.session.commit()
 
     AjustesHR.get_or_create()
+    AjustesComercial.get_or_create(defaults=app.config.get("EMPRESA"))
 
 
 def seed_content_if_empty(app) -> None:

@@ -100,7 +100,7 @@ class Postulacion(db.Model):
 
 
 class AjustesHR(db.Model):
-    """Configuración global de Capital Humano (correos para CVs espontáneos)."""
+    """Configuración global de Capital Humano (correos de notificación)."""
 
     __tablename__ = "ajustes_hr"
 
@@ -118,6 +118,81 @@ class AjustesHR(db.Model):
         if row:
             return row
         row = cls()
+        db.session.add(row)
+        db.session.commit()
+        return row
+
+
+class AjustesComercial(db.Model):
+    """Datos públicos de contacto + correos de cotización / asesores."""
+
+    __tablename__ = "ajustes_comercial"
+
+    id = db.Column(db.Integer, primary_key=True)
+    telefono = db.Column(db.String(60), nullable=True)
+    email = db.Column(db.String(160), nullable=True)
+    direccion = db.Column(db.Text, nullable=True)
+    mapa_query = db.Column(db.String(255), nullable=True)
+    # Número WhatsApp (solo dígitos con lada país, ej. 529902293374)
+    whatsapp = db.Column(db.String(40), nullable=True)
+    facebook = db.Column(db.String(255), nullable=True)
+    instagram = db.Column(db.String(255), nullable=True)
+    linkedin = db.Column(db.String(255), nullable=True)
+    tiktok = db.Column(db.String(255), nullable=True)
+    # Correos que reciben el formulario de contacto / cotización
+    correo_1 = db.Column(db.String(160), nullable=True)
+    correo_2 = db.Column(db.String(160), nullable=True)
+    correo_3 = db.Column(db.String(160), nullable=True)
+
+    def correos_destino(self) -> list[str]:
+        return [c for c in (self.correo_1, self.correo_2, self.correo_3) if c and "@" in c]
+
+    @property
+    def whatsapp_url(self) -> str:
+        digits = "".join(ch for ch in (self.whatsapp or "") if ch.isdigit())
+        if not digits:
+            return "https://wa.me/529902293374"
+        return f"https://wa.me/{digits}"
+
+    def as_empresa_dict(self, defaults: dict | None = None) -> dict:
+        base = dict(defaults or {})
+        base.update(
+            {
+                "telefono": self.telefono or base.get("telefono", ""),
+                "email": self.email or base.get("email", ""),
+                "direccion": self.direccion or base.get("direccion", ""),
+                "mapa_query": self.mapa_query or base.get("mapa_query", ""),
+                "whatsapp": self.whatsapp_url,
+                "facebook": self.facebook or base.get("facebook", ""),
+                "instagram": self.instagram or base.get("instagram", ""),
+                "linkedin": self.linkedin or base.get("linkedin", ""),
+                "tiktok": self.tiktok or base.get("tiktok", ""),
+            }
+        )
+        if "nombre" not in base:
+            base["nombre"] = "Marnez Desarrollos"
+        return base
+
+    @classmethod
+    def get_or_create(cls, defaults: dict | None = None):
+        row = cls.query.first()
+        if row:
+            return row
+        d = defaults or {}
+        wa = d.get("whatsapp") or ""
+        digits = "".join(ch for ch in wa.replace("https://wa.me/", "") if ch.isdigit())
+        row = cls(
+            telefono=d.get("telefono"),
+            email=d.get("email"),
+            direccion=d.get("direccion"),
+            mapa_query=d.get("mapa_query"),
+            whatsapp=digits or "529902293374",
+            facebook=d.get("facebook"),
+            instagram=d.get("instagram"),
+            linkedin=d.get("linkedin"),
+            tiktok=d.get("tiktok"),
+            correo_1=d.get("email"),
+        )
         db.session.add(row)
         db.session.commit()
         return row

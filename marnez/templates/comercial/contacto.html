@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Contacto y cotizaciones · Panel Comercial{% endblock %}
+
+{% block content %}
+<section class="max-w-3xl mx-auto px-5 md:px-8 py-16">
+  <a href="{{ url_for('comercial.panel') }}" class="text-gold text-sm hover:text-goldlight">&larr; Volver al panel</a>
+  <h1 class="font-display text-4xl mt-6 mb-3">Contacto del sitio</h1>
+  <p class="text-cream/60 text-sm mb-10 leading-relaxed">
+    Estos datos se muestran en la página de Contacto, el pie de página y el ícono flotante de WhatsApp.
+    También defines a qué correos llegan las solicitudes del formulario (cotización / hablar con un asesor).
+  </p>
+
+  <form method="post" class="space-y-6 rounded-2xl border border-white/10 bg-panel p-8">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <h2 class="font-display text-2xl text-gold">Datos públicos</h2>
+    <div>
+      <label class="block text-sm text-cream/70 mb-2">Teléfono</label>
+      <input type="text" name="telefono" required value="{{ form.get('telefono', a.telefono or '') }}" placeholder="+52 990 229 3374" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+    </div>
+    <div>
+      <label class="block text-sm text-cream/70 mb-2">Correo público</label>
+      <input type="email" name="email" required value="{{ form.get('email', a.email or '') }}" placeholder="hola@marnez.mx" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+    </div>
+    <div>
+      <label class="block text-sm text-cream/70 mb-2">Oficinas / dirección</label>
+      <textarea name="direccion" rows="2" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">{{ form.get('direccion', a.direccion or '') }}</textarea>
+    </div>
+    <div>
+      <label class="block text-sm text-cream/70 mb-2">Query de mapa (Google)</label>
+      <input type="text" name="mapa_query" value="{{ form.get('mapa_query', a.mapa_query or '') }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+    </div>
+
+    <div class="rounded-xl border border-emerald-500/30 bg-ink/40 p-5 space-y-3">
+      <h3 class="font-display text-xl text-emerald-300">WhatsApp (ícono flotante)</h3>
+      <p class="text-cream/50 text-xs">Solo números, con lada de país. Ejemplo México: <code class="text-cream/70">529902293374</code></p>
+      <input type="text" name="whatsapp" required value="{{ form.get('whatsapp', a.whatsapp or '') }}" placeholder="529902293374" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+      {% if a.whatsapp %}
+        <p class="text-xs text-cream/45">Vista previa: <a href="{{ a.whatsapp_url }}" target="_blank" rel="noopener" class="text-emerald-300 hover:underline">{{ a.whatsapp_url }}</a></p>
+      {% endif %}
+    </div>
+
+    <fieldset class="space-y-4 rounded-xl border border-gold/25 p-5">
+      <legend class="px-2 text-sm text-gold">Correos que reciben cotizaciones / contacto</legend>
+      <p class="text-cream/50 text-xs -mt-2">Hasta 3. Llegan cuando alguien envía el formulario de Contacto.</p>
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Correo 1 *</label>
+        <input type="email" name="correo_1" value="{{ form.get('correo_1', a.correo_1 or '') }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+      </div>
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Correo 2</label>
+        <input type="email" name="correo_2" value="{{ form.get('correo_2', a.correo_2 or '') }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+      </div>
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Correo 3</label>
+        <input type="email" name="correo_3" value="{{ form.get('correo_3', a.correo_3 or '') }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+      </div>
+    </fieldset>
+
+    <details class="rounded-xl border border-white/10 p-4">
+      <summary class="cursor-pointer text-sm text-cream/60">Redes sociales (opcional)</summary>
+      <div class="mt-4 space-y-4">
+        <div>
+          <label class="block text-xs text-cream/50 mb-1">Facebook</label>
+          <input type="url" name="facebook" value="{{ form.get('facebook', a.facebook or '') }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-2.5 focus:border-gold focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-xs text-cream/50 mb-1">Instagram</label>
+          <input type="url" name="instagram" value="{{ form.get('instagram', a.instagram or '') }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-2.5 focus:border-gold focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-xs text-cream/50 mb-1">LinkedIn</label>
+          <input type="url" name="linkedin" value="{{ form.get('linkedin', a.linkedin or '') }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-2.5 focus:border-gold focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-xs text-cream/50 mb-1">TikTok</label>
+          <input type="url" name="tiktok" value="{{ form.get('tiktok', a.tiktok or '') }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-2.5 focus:border-gold focus:outline-none">
+        </div>
+      </div>
+    </details>
+
+    <button type="submit" class="w-full rounded-full bg-gold px-6 py-3.5 text-ink font-semibold hover:bg-goldlight transition-colors">Guardar cambios</button>
+  </form>
+</section>
+{% endblock %}

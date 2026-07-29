@@ -12,7 +12,7 @@ from flask import (
 from pathlib import Path
 
 from ..extensions import db
-from ..models import Lead
+from ..models import Lead, AjustesComercial
 from ..data import TESTIMONIOS, CERTIFICACIONES, EQUIPO_FOTOS
 from ..content import (
     list_desarrollos_activos,
@@ -21,6 +21,7 @@ from ..content import (
     get_blog_post,
 )
 from ..media import desarrollo_img_url
+from ..mail import enviar_notificacion_lead
 
 main_bp = Blueprint("main", __name__, template_folder="../templates")
 
@@ -129,6 +130,12 @@ def contacto():
         )
         db.session.add(lead)
         db.session.commit()
+
+        destinos = AjustesComercial.get_or_create(
+            defaults=current_app.config.get("EMPRESA")
+        ).correos_destino()
+        enviar_notificacion_lead(lead, destinos)
+
         flash("¡Gracias! Un asesor de Marnez te contactará muy pronto.", "success")
         return redirect(url_for("main.contacto"))
 
