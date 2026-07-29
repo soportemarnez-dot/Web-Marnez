@@ -199,10 +199,10 @@ TESTIMONIOS = [
 ]
 
 CERTIFICACIONES = [
-    "Protección jurídica patrimonial",
-    "Escrituración inmediata",
-    "Programa de referidos",
-    "Cumplimiento normativo PROFECO",
+    {"texto": "Protección jurídica patrimonial", "logo": None},
+    {"texto": "Escrituración inmediata", "logo": "brand/escrituracion.png"},
+    {"texto": "Programa de referidos", "logo": None},
+    {"texto": "Cumplimiento normativo PROFECO", "logo": None},
 ]
 
 BLOG_POSTS = [

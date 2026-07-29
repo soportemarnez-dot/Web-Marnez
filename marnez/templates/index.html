@@ -44,9 +44,15 @@
 <section class="border-y border-white/10 bg-panel">
   <div class="max-w-7xl mx-auto px-5 md:px-8 py-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
     {% for c in certificaciones %}
+      {% set texto = c.texto if c is mapping else c %}
+      {% set logo = c.logo if c is mapping else none %}
       <div class="flex flex-col items-center gap-2" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 80 }}">
-        <span class="text-gold text-2xl font-display">0{{ loop.index }}</span>
-        <p class="text-sm text-cream/70">{{ c }}</p>
+        {% if logo %}
+          <img src="{{ url_for('static', filename='img/' ~ logo) }}" alt="{{ texto }}" class="h-12 md:h-14 w-auto object-contain mb-1 brightness-0 invert opacity-90">
+        {% else %}
+          <span class="text-gold text-2xl font-display">0{{ loop.index }}</span>
+        {% endif %}
+        <p class="text-sm text-cream/70">{{ texto }}</p>
       </div>
     {% endfor %}
   </div>

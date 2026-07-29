@@ -54,9 +54,17 @@
   <h2 class="font-display text-3xl mb-10 text-center" data-aos="fade-up">Nuestros compromisos</h2>
   <div class="grid sm:grid-cols-2 gap-6">
     {% for c in certificaciones %}
+      {% set texto = c.texto if c is mapping else c %}
+      {% set logo = c.logo if c is mapping else none %}
       <div class="flex items-start gap-4 rounded-xl border border-white/10 bg-panel p-6" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 80 }}">
-        <span class="icon-badge icon-badge-md"><img src="{{ url_for('static', filename='img/icons/' ~ compromiso_icons[loop.index0 % compromiso_icons|length]) }}" alt=""></span>
-        <p class="text-cream/80 pt-1.5">{{ c }}</p>
+        {% if logo %}
+          <span class="shrink-0 h-12 w-12 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 overflow-hidden p-1.5">
+            <img src="{{ url_for('static', filename='img/' ~ logo) }}" alt="{{ texto }}" class="max-h-full max-w-full object-contain brightness-0 invert opacity-90">
+          </span>
+        {% else %}
+          <span class="icon-badge icon-badge-md"><img src="{{ url_for('static', filename='img/icons/' ~ compromiso_icons[loop.index0 % compromiso_icons|length]) }}" alt=""></span>
+        {% endif %}
+        <p class="text-cream/80 pt-1.5">{{ texto }}</p>
       </div>
     {% endfor %}
   </div>

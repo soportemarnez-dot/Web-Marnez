@@ -19,7 +19,7 @@ class Config:
     UPLOAD_FOLDER = str(BASE_DIR / os.environ.get("UPLOAD_FOLDER", "uploads/cv"))
     MEDIA_FOLDER = str(BASE_DIR / os.environ.get("MEDIA_FOLDER", "uploads/media"))
     ALLOWED_CV_EXTENSIONS = {"pdf", "doc", "docx"}
-    MAX_CONTENT_LENGTH = int(os.environ.get("MAX_CONTENT_LENGTH_MB", 8)) * 1024 * 1024
+    MAX_CONTENT_LENGTH = int(os.environ.get("MAX_CONTENT_LENGTH_MB", 64)) * 1024 * 1024
 
     ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "capitalhumano@marnez.mx")
     ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "marnez2026")
