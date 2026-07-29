@@ -1,0 +1,21 @@
+[Unit]
+Description=Marnez Desarrollos (Gunicorn)
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/web-marnez
+EnvironmentFile=/var/www/web-marnez/.env
+ExecStart=/var/www/web-marnez/.venv/bin/gunicorn \
+    --workers 3 \
+    --bind 127.0.0.1:8000 \
+    --timeout 120 \
+    --access-logfile /var/log/web-marnez/access.log \
+    --error-logfile /var/log/web-marnez/error.log \
+    app:app
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
