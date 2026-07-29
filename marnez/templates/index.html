@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Marnez Desarrollos · Terrenos y residenciales premium en Yucatán{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<section class="relative h-[92vh] min-h-[560px] -mt-20 overflow-hidden" data-hero-slider>
+  {% set hero_imgs = ['hero/hero-night.jpg', 'hero/hero-concept-1.jpg', 'hero/hero-concept-2.jpg', 'desarrollos/costella/costella-01.jpg'] %}
+  {% for img in hero_imgs %}
+    <div class="hero-slide {{ 'is-active' if loop.first }}">
+      <img src="{{ url_for('static', filename='img/' ~ img) }}" alt="Desarrollo Marnez" class="h-full w-full object-cover">
+      <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/50"></div>
+      <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-transparent"></div>
+    </div>
+  {% endfor %}
+
+  <div class="relative z-10 h-full flex items-center">
+    <div class="max-w-7xl mx-auto px-5 md:px-8 w-full">
+      <div class="max-w-2xl" data-aos="fade-up">
+        <p class="uppercase tracking-[0.3em] text-gold text-sm mb-5">Negocios Inmobiliarios · Yucatán</p>
+        <h1 class="font-display text-5xl md:text-7xl leading-[1.05] mb-6 text-white">
+          Invierte en tierra con <span class="text-gold-gradient">certeza</span> y visión de futuro
+        </h1>
+        <p class="text-white/80 text-lg mb-10 max-w-xl">
+          Marnez Desarrollos crea comunidades residenciales y vacacionales en las mejores ubicaciones
+          de Yucatán, con acompañamiento legal y escrituración inmediata en cada etapa.
+        </p>
+        <div class="flex flex-wrap gap-4">
+          <a href="{{ url_for('main.desarrollos') }}" class="btn-shimmer inline-flex items-center gap-2 rounded-full bg-gold px-7 py-3.5 text-ink font-semibold hover:bg-goldlight transition-colors">
+            Ver desarrollos
+          </a>
+          <a href="{{ url_for('main.contacto') }}" class="hero-outline-btn inline-flex items-center gap-2 rounded-full px-7 py-3.5 transition-colors">
+            Habla con un asesor
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-10" data-hero-dots></div>
+</section>
+
+<!-- CERTIFICACIONES -->
+<section class="border-y border-white/10 bg-panel">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 py-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+    {% for c in certificaciones %}
+      <div class="flex flex-col items-center gap-2" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 80 }}">
+        <span class="text-gold text-2xl font-display">0{{ loop.index }}</span>
+        <p class="text-sm text-cream/70">{{ c }}</p>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- DESARROLLOS DESTACADOS -->
+<section class="max-w-7xl mx-auto px-5 md:px-8 py-24">
+  <div class="flex items-end justify-between mb-12 flex-wrap gap-4" data-aos="fade-up">
+    <div>
+      <p class="uppercase tracking-[0.3em] text-gold text-sm mb-3">Nuestros desarrollos</p>
+      <h2 class="font-display text-4xl md:text-5xl">Terrenos residenciales y vacacionales</h2>
+    </div>
+    <a href="{{ url_for('main.desarrollos') }}" class="text-gold hover:text-goldlight border-b border-gold/40 hover:border-gold pb-1">Ver todos los desarrollos &rarr;</a>
+  </div>
+
+  <div class="grid md:grid-cols-3 gap-8">
+    {% for d in destacados %}
+      <a href="{{ url_for('main.desarrollo_detalle', slug=d.slug) }}" class="card-lift group block rounded-2xl overflow-hidden bg-panel border border-white/10" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+        <div class="aspect-[4/5] overflow-hidden">
+          <img src="{{ d.portada | desarrollo_img(d.slug) }}" alt="{{ d.nombre }}" class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700">
+        </div>
+        <div class="p-6">
+          <p class="text-gold text-xs uppercase tracking-widest mb-2">{{ d.estatus }}</p>
+          <h3 class="font-display text-2xl mb-2">{{ d.nombre }}</h3>
+          <p class="text-cream/70 text-sm mb-4">{{ d.resumen }}</p>
+          <span class="inline-flex items-center gap-2 text-sm text-gold">Ver desarrollo &rarr;</span>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- NOSOTROS BITE -->
+<section class="bg-panel border-y border-white/10">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 py-24 grid md:grid-cols-2 gap-14 items-center">
+    <div data-aos="fade-right">
+      <img src="{{ url_for('static', filename='img/desarrollos/antal/antal-06.jpg') }}" alt="Marnez Desarrollos" class="rounded-2xl w-full h-[420px] object-cover">
+    </div>
+    <div data-aos="fade-left">
+      <p class="uppercase tracking-[0.3em] text-gold text-sm mb-4">Marnez Desarrollos</p>
+      <h2 class="font-display text-4xl mb-6">Negocios inmobiliarios con visión de largo plazo</h2>
+      <p class="text-cream/75 leading-relaxed mb-6">
+        Somos una empresa yucateca enfocada en la creación, desarrollo y comercialización de negocios
+        inmobiliarios. Generamos productos de gran valor para socios e inversionistas y ofrecemos una
+        visión de futuro que asegura el patrimonio y crecimiento de nuestros clientes.
+      </p>
+      <a href="{{ url_for('main.nosotros') }}" class="inline-flex items-center gap-2 text-gold border-b border-gold/40 hover:border-gold pb-1">Conoce más &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIOS -->
+<section class="max-w-7xl mx-auto px-5 md:px-8 py-24">
+  <p class="uppercase tracking-[0.3em] text-gold text-sm mb-3 text-center" data-aos="fade-up">Testimoniales</p>
+  <h2 class="font-display text-4xl text-center mb-14" data-aos="fade-up">La confianza de quienes ya invirtieron</h2>
+  <div class="grid md:grid-cols-3 gap-8">
+    {% for t in testimonios %}
+      <div class="testimonial-card" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+        <span class="testimonial-quote-mark">&rdquo;</span>
+        <p class="testimonial-stars mb-4">&#9733;&#9733;&#9733;&#9733;&#9733;</p>
+        <p class="text-cream/80 leading-relaxed mb-8 relative">{{ t.texto }}</p>
+        <div class="flex items-center gap-3 relative">
+          <span class="testimonial-avatar">{{ t.iniciales }}</span>
+          <div>
+            <p class="font-semibold">{{ t.nombre }}</p>
+            <p class="text-cream/50 text-sm">{{ t.detalle }}</p>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- BLOG PREVIEW -->
+<section class="bg-panel border-y border-white/10">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 py-24">
+    <div class="flex items-end justify-between mb-12 flex-wrap gap-4" data-aos="fade-up">
+      <div>
+        <p class="uppercase tracking-[0.3em] text-gold text-sm mb-3">Blog</p>
+        <h2 class="font-display text-4xl">Noticias relevantes</h2>
+      </div>
+      <a href="{{ url_for('main.blog') }}" class="text-gold hover:text-goldlight border-b border-gold/40 hover:border-gold pb-1">Ver todo el blog &rarr;</a>
+    </div>
+    <div class="grid md:grid-cols-3 gap-8">
+      {% for p in posts %}
+        <a href="{{ url_for('main.blog_post', slug=p.slug) }}" class="card-lift group block rounded-2xl overflow-hidden bg-ink border border-white/10" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+          <div class="aspect-video overflow-hidden">
+            <img src="{{ p.imagen | blog_img }}" alt="{{ p.titulo }}" class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700">
+          </div>
+          <div class="p-6">
+            <h3 class="font-display text-xl mb-2">{{ p.titulo }}</h3>
+            <p class="text-cream/60 text-sm">{{ p.resumen }}</p>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- CTA UNETE A NOSOTROS -->
+<section class="max-w-7xl mx-auto px-5 md:px-8 py-24">
+  <div class="rounded-3xl border border-gold/30 bg-gradient-to-br from-panel to-ink p-10 md:p-16 grid md:grid-cols-2 gap-10 items-center" data-aos="fade-up">
+    <div>
+      <p class="uppercase tracking-[0.3em] text-gold text-sm mb-4">Bolsa de trabajo</p>
+      <h2 class="font-display text-4xl mb-5">Únete a Nosotros</h2>
+      <p class="text-cream/75 leading-relaxed">
+        Buscamos talento que comparta nuestra visión. Consulta las vacantes abiertas o, si no
+        encuentras el puesto que buscas, comparte tu CV para que Capital Humano lo revise.
+      </p>
+    </div>
+    <div class="flex flex-col sm:flex-row gap-4 md:justify-end">
+      <a href="{{ url_for('carreras.index') }}" class="inline-flex items-center justify-center rounded-full bg-gold px-7 py-3.5 text-ink font-semibold hover:bg-goldlight transition-colors">Ver vacantes</a>
+      <a href="{{ url_for('carreras.postular_espontanea') }}" class="inline-flex items-center justify-center rounded-full border border-white/30 px-7 py-3.5 hover:border-gold hover:text-gold transition-colors">Enviar mi CV</a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

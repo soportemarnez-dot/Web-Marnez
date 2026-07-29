@@ -1,0 +1,530 @@
+@font-face {
+  font-family: 'Guaruja Neue';
+  src: url('../fonts/GuarujaNeue-ExtraLight.ttf') format('truetype');
+  font-weight: 200; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Guaruja Neue';
+  src: url('../fonts/GuarujaNeue-Thin.ttf') format('truetype');
+  font-weight: 100; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Guaruja Neue';
+  src: url('../fonts/GuarujaNeue-Light.ttf') format('truetype');
+  font-weight: 300; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Guaruja Neue';
+  src: url('../fonts/GuarujaNeue-Regular.ttf') format('truetype');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Guaruja Neue';
+  src: url('../fonts/GuarujaNeue-Italic.ttf') format('truetype');
+  font-weight: 400; font-style: italic; font-display: swap;
+}
+@font-face {
+  font-family: 'Guaruja Neue';
+  src: url('../fonts/GuarujaNeue-Medium.ttf') format('truetype');
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Guaruja Neue';
+  src: url('../fonts/GuarujaNeue-SemiBold.ttf') format('truetype');
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Guaruja Neue';
+  src: url('../fonts/GuarujaNeue-Bold.ttf') format('truetype');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Guaruja Neue';
+  src: url('../fonts/GuarujaNeue-Black.ttf') format('truetype');
+  font-weight: 900; font-style: normal; font-display: swap;
+}
+
+/* ==================== Tema claro / oscuro ==================== */
+:root {
+  --c-ink: 15 17 21;         /* fondo de pagina (oscuro) */
+  --c-panel: 23 26 33;       /* tarjetas / superficies */
+  --c-gold: 201 169 98;
+  --c-goldlight: 228 207 156;
+  --c-cream: 244 239 230;    /* texto principal */
+  --c-hairline: 255 255 255; /* color base de bordes sutiles */
+  --hairline-a1: .10; --hairline-a2: .15; --hairline-a3: .20; --hairline-a4: .30;
+  --scrim-a1: .05; --scrim-a2: .10; --scrim-a3: .40; --scrim-a4: .70; --scrim-a5: .90;
+}
+html.light {
+  --c-ink: 250 249 246;
+  --c-panel: 255 255 255;
+  --c-gold: 165 128 47;
+  --c-goldlight: 122 95 35;
+  --c-cream: 26 24 20;
+  --c-hairline: 15 17 21;
+  --hairline-a1: .08; --hairline-a2: .1; --hairline-a3: .14; --hairline-a4: .22;
+  --scrim-a1: .04; --scrim-a2: .06; --scrim-a3: .18; --scrim-a4: .35; --scrim-a5: .55;
+}
+html.light body { background: rgb(var(--c-ink)); }
+
+/* Utilidades "en blanco/negro" reutilizadas en todo el sitio: al cambiar de tema
+   deben leer del hairline/scrim en vez de quedar fijas en blanco. */
+html.light .border-white\/10 { border-color: rgb(var(--c-hairline) / var(--hairline-a1)); }
+html.light .border-white\/15 { border-color: rgb(var(--c-hairline) / var(--hairline-a2)); }
+html.light .border-white\/20 { border-color: rgb(var(--c-hairline) / var(--hairline-a3)); }
+html.light .border-white\/30 { border-color: rgb(var(--c-hairline) / var(--hairline-a4)); }
+html.light .divide-white\/10 > :not([hidden]) ~ :not([hidden]) { border-color: rgb(var(--c-hairline) / var(--hairline-a1)); }
+html.light .bg-white\/5  { background-color: rgb(var(--c-hairline) / var(--scrim-a1)); }
+html.light .bg-white\/10 { background-color: rgb(var(--c-hairline) / var(--scrim-a2)); }
+html.light .bg-white\/40 { background-color: rgb(var(--c-hairline) / var(--scrim-a3)); }
+html.light .bg-white\/70 { background-color: rgb(var(--c-hairline) / var(--scrim-a4)); }
+html.light .text-white\/90 { color: rgb(var(--c-hairline) / .85); }
+html.light .hover\:bg-white\/70:hover { background-color: rgb(var(--c-hairline) / var(--scrim-a4)); }
+html.light .placeholder\:text-cream\/40::placeholder { color: rgb(var(--c-cream) / .4); }
+/* Los degradados de "scrim" sobre fotos (legibilidad de texto) se mantienen oscuros
+   siempre: usan from-black/via-black, que no dependen del tema. */
+
+.theme-logo-dark { display: block; }
+.theme-logo-light { display: none; }
+html.light .theme-logo-dark { display: none; }
+html.light .theme-logo-light { display: block; }
+
+[x-cloak] { display: none !important; }
+
+html { scroll-behavior: smooth; }
+
+::selection { background: #c9a962; color: #0f1115; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: rgb(var(--c-ink)); }
+::-webkit-scrollbar-thumb { background: rgb(var(--c-hairline) / .18); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #c9a962; }
+
+/* Hero slider fade */
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.1s ease-in-out;
+}
+.hero-slide.is-active {
+  opacity: 1;
+  z-index: 1;
+}
+
+/* Card hover lift */
+.card-lift {
+  transition: transform .4s ease, box-shadow .4s ease;
+}
+.card-lift:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 48px -12px rgba(0,0,0,.55);
+}
+
+/* Gold gradient text */
+.text-gold-gradient {
+  background: linear-gradient(90deg, #e4cf9c, #c9a962 50%, #a9873f);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Toast animation */
+.toast {
+  animation: toast-in .35s ease;
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Gallery lightbox */
+#lightbox {
+  transition: opacity .25s ease;
+}
+
+input, textarea, select {
+  color-scheme: dark;
+}
+
+/* Modern social icons */
+.social-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.5rem;
+  width: 2.5rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255,255,255,.15);
+  color: rgba(244,239,230,.8);
+  transition: transform .3s ease, border-color .3s ease, color .3s ease, box-shadow .3s ease, background-color .3s ease;
+}
+.social-icon svg { height: 1.1rem; width: 1.1rem; }
+.social-icon:hover {
+  border-color: #c9a962;
+  color: #0f1115;
+  background: linear-gradient(135deg, #e4cf9c, #c9a962);
+  transform: translateY(-3px) scale(1.06);
+  box-shadow: 0 10px 24px -8px rgba(201,169,98,.55);
+}
+
+/* Floating WhatsApp button */
+.fab-whatsapp {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 3.5rem;
+  width: 3.5rem;
+  border-radius: 9999px;
+  background: linear-gradient(160deg, #34e07d, #1fb455);
+  color: #0f1115;
+  border: 1px solid rgba(255,255,255,.35);
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,.55),
+    inset 0 -6px 10px rgba(0,0,0,.18),
+    0 10px 30px -6px rgba(37,211,102,.6);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition: transform .25s ease, box-shadow .25s ease;
+  overflow: hidden;
+}
+.fab-whatsapp svg { height: 1.65rem; width: 1.65rem; filter: drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+.fab-whatsapp:hover { transform: scale(1.08); box-shadow: inset 0 1px 1px rgba(255,255,255,.6), inset 0 -6px 10px rgba(0,0,0,.18), 0 14px 36px -6px rgba(37,211,102,.75); }
+.fab-whatsapp::after {
+  content: '';
+  position: absolute;
+  top: -10%; left: 6%;
+  width: 60%; height: 45%;
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,0));
+  filter: blur(1px);
+  pointer-events: none;
+}
+.fab-whatsapp::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: #25D366;
+  opacity: .55;
+  animation: fab-pulse 2.4s ease-out infinite;
+  z-index: -1;
+}
+@keyframes fab-pulse {
+  0% { transform: scale(1); opacity: .55; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+
+/* Shimmer sweep on primary buttons */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.btn-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -60%;
+  height: 100%; width: 40%;
+  background: linear-gradient(115deg, transparent, rgba(255,255,255,.55), transparent);
+  transform: skewX(-20deg);
+  animation: shimmer-sweep 3.2s ease-in-out infinite;
+}
+@keyframes shimmer-sweep {
+  0% { left: -60%; }
+  35%, 100% { left: 130%; }
+}
+
+/* ==================== Intro splash: cristal dorado ==================== */
+#splash {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: #06070a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 1.1s cubic-bezier(.4,0,.2,1), visibility 1.1s;
+}
+/* Fase 1: el contenido (fondo + palabra) se apaga primero, dejando un panel solido */
+#splash.splash-fade-content img.splash-bg,
+#splash.splash-fade-content .splash-overlay {
+  opacity: 0 !important;
+  transition: opacity .9s ease !important;
+}
+#splash.splash-fade-content .splash-word {
+  opacity: 0 !important;
+  transform: scale(1.015) !important;
+  filter: blur(4px) !important;
+  transition: opacity .8s cubic-bezier(.4,0,.2,1), transform .8s cubic-bezier(.4,0,.2,1), filter .8s cubic-bezier(.4,0,.2,1) !important;
+}
+/* Fase 2: con todo ya invisible sobre panel solido, se disuelve el panel completo */
+#splash.splash-exit {
+  opacity: 0;
+}
+#splash.splash-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+#splash img.splash-bg {
+  position: absolute;
+  inset: 0;
+  height: 100%; width: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1.04);
+  transition: opacity 1.6s ease;
+}
+#splash img.splash-bg.is-in {
+  opacity: .26;
+}
+#splash .splash-overlay {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, rgba(6,7,10,.1), rgba(6,7,10,.95));
+  transition: opacity .9s ease;
+}
+
+/* Palabra central: entrada suave tipo Apple "Hello" */
+#splash .splash-word {
+  position: relative;
+  text-align: center;
+  padding: 0 1.5rem;
+  opacity: 0;
+  transform: scale(.94);
+  filter: blur(14px);
+  transition: opacity 1.6s cubic-bezier(.19,1,.22,1), transform 1.6s cubic-bezier(.19,1,.22,1), filter 1.6s cubic-bezier(.19,1,.22,1);
+}
+#splash .splash-word.is-in {
+  opacity: 1;
+  transform: scale(1);
+  filter: blur(0);
+}
+#splash .splash-word-glass {
+  font-family: 'Playfair Display', 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: clamp(2.2rem, 7vw, 5.2rem);
+  line-height: 1.05;
+  letter-spacing: .01em;
+  background: linear-gradient(100deg,
+    #7a6531 0%, #d9bd7c 20%, #fff6df 32%, #fffdf6 38%, #fff6df 44%, #e4cf9c 55%, #a9873f 72%, #7a6531 100%);
+  background-size: 260% auto;
+  background-position: 100% center;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: splash-glass-shine 2.6s ease-in-out infinite;
+  filter: drop-shadow(0 2px 18px rgba(228, 207, 156, .25));
+}
+@keyframes splash-glass-shine {
+  0% { background-position: 130% center; }
+  60%, 100% { background-position: -30% center; }
+}
+
+/* ==================== Liquid Glass (acentos estilo Apple) ==================== */
+/* Superficie de cristal: fondo translucido + blur + realce especular superior. */
+/* El cristal (fondo/realces) SIEMPRE tiende a blanco esmerilado en ambos temas
+   -- asi se ve el material "Liquid Glass" real de Apple tanto en claro como en
+   oscuro. Solo la sombra exterior (siempre oscura) y el borde dan la sensacion
+   de profundidad; nunca deben leer de --c-hairline (que se invierte a oscuro
+   en modo claro y oscurecería el cristal en vez de aclararlo). */
+.liquid-glass {
+  position: relative;
+  background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.05));
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  backdrop-filter: blur(22px) saturate(160%);
+  border: 1px solid rgba(255,255,255,.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.5),
+    inset 0 0 22px rgba(255,255,255,.06),
+    0 18px 40px -14px rgba(0,0,0,.4);
+}
+html.light .liquid-glass {
+  background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.3));
+  border: 1px solid rgba(255,255,255,.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.8),
+    inset 0 0 22px rgba(255,255,255,.15),
+    0 18px 40px -14px rgba(15,17,21,.18);
+}
+/* Barrido de luz sutil que "respira" sobre la superficie de cristal */
+.liquid-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.28) 46%, rgba(255,255,255,.05) 54%, transparent 70%);
+  background-size: 250% 250%;
+  background-position: 100% 0%;
+  opacity: .8;
+  animation: liquid-glass-sheen 7s ease-in-out infinite;
+}
+@keyframes liquid-glass-sheen {
+  0%, 100% { background-position: 120% 0%; }
+  50% { background-position: -20% 100%; }
+}
+.liquid-glass-gold {
+  border-color: rgb(var(--c-gold) / .35);
+  box-shadow:
+    inset 0 1px 0 rgb(var(--c-goldlight) / .4),
+    inset 0 0 26px rgb(var(--c-gold) / .06),
+    0 18px 40px -14px rgba(0,0,0,.5);
+}
+
+/* ==================== Selector de tema (switch) ==================== */
+.theme-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 3.1rem;
+  height: 1.7rem;
+  padding: 2px;
+  border-radius: 9999px;
+  background: rgb(var(--c-hairline) / .12);
+  border: 1px solid rgb(var(--c-hairline) / .18);
+  cursor: pointer;
+  transition: background-color .35s ease, border-color .35s ease;
+  flex-shrink: 0;
+}
+.theme-toggle:hover { border-color: rgb(var(--c-gold) / .5); }
+.theme-toggle-thumb {
+  height: 1.3rem;
+  width: 1.3rem;
+  border-radius: 9999px;
+  background: linear-gradient(160deg, #f3e2b8, #c9a962);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateX(0);
+  transition: transform .4s cubic-bezier(.4,0,.2,1);
+  box-shadow: 0 2px 6px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.5);
+}
+html.light .theme-toggle-thumb { transform: translateX(1.4rem); }
+.theme-toggle-thumb svg { height: .8rem; width: .8rem; color: #0f1115; }
+.theme-toggle-thumb .icon-sun { display: none; }
+html.light .theme-toggle-thumb .icon-moon { display: none; }
+html.light .theme-toggle-thumb .icon-sun { display: block; }
+
+/* ==================== Footer ==================== */
+.footer-surface { background: rgb(var(--c-panel)); }
+.footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  transition: color .2s ease, gap .2s ease;
+}
+.footer-link svg {
+  height: .7rem; width: .7rem;
+  color: rgb(var(--c-gold));
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity .2s ease, transform .2s ease;
+}
+.footer-link:hover { color: rgb(var(--c-gold)); gap: .55rem; }
+.footer-link:hover svg { opacity: 1; transform: translateX(0); }
+.footer-icon {
+  display: flex; align-items: center; justify-content: center;
+  height: 2.25rem; width: 2.25rem; flex-shrink: 0;
+  border-radius: 9999px;
+  background: linear-gradient(155deg, rgb(var(--c-goldlight) / .22), rgb(var(--c-gold) / .12));
+  border: 1px solid rgb(var(--c-gold) / .25);
+  color: rgb(var(--c-gold));
+}
+.footer-icon svg { height: 1.05rem; width: 1.05rem; }
+.back-to-top {
+  display: inline-flex; align-items: center; gap: .5rem;
+  font-size: .8rem;
+  color: rgb(var(--c-cream) / .6);
+  transition: color .25s ease, transform .25s ease;
+}
+.back-to-top svg { height: 1rem; width: 1rem; }
+.back-to-top:hover { color: rgb(var(--c-gold)); transform: translateY(-2px); }
+
+/* ==================== Testimonios ==================== */
+.testimonial-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  border: 1px solid rgb(var(--c-hairline) / var(--hairline-a1));
+  background: linear-gradient(165deg, rgb(var(--c-panel)), rgb(var(--c-panel)) 60%, rgb(var(--c-gold) / .04));
+  padding: 2.25rem 2rem;
+  transition: transform .4s ease, border-color .4s ease, box-shadow .4s ease;
+}
+.testimonial-card:hover {
+  transform: translateY(-6px);
+  border-color: rgb(var(--c-gold) / .4);
+  box-shadow: 0 24px 48px -20px rgba(0,0,0,.5);
+}
+.testimonial-quote-mark {
+  position: absolute;
+  top: -.5rem; right: 1rem;
+  font-family: 'Playfair Display', serif;
+  font-size: 7rem;
+  line-height: 1;
+  color: rgb(var(--c-gold) / .12);
+  pointer-events: none;
+}
+.testimonial-avatar {
+  height: 3rem; width: 3rem;
+  border-radius: 9999px;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(155deg, rgb(var(--c-goldlight)), rgb(var(--c-gold)));
+  color: #0f1115;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+.testimonial-stars { color: rgb(var(--c-gold)); letter-spacing: .1em; }
+
+/* ==================== Texto sobre fotos hero ====================
+   Estas fotos siempre llevan un scrim oscuro (from-black/via-black), sin
+   importar el tema activo, asi que su texto SIEMPRE debe ser blanco: nunca
+   debe leer de --c-cream (que se invierte a casi-negro en modo claro). */
+.hero-outline-btn {
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.35);
+}
+.hero-outline-btn:hover {
+  border-color: rgb(var(--c-gold));
+  color: rgb(var(--c-gold));
+}
+
+/* Titulos (font-display) en negrita; las etiquetas doradas (uppercase/eyebrow,
+   font-sans) mantienen su peso medium/regular actual sin verse afectadas. */
+.font-display { font-weight: 700; }
+
+/* ==================== Icono + badge circular (amenidades, compromisos, etc.) */
+.icon-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: rgb(var(--c-gold) / .14);
+}
+.icon-badge img {
+  filter: brightness(0) saturate(100%);
+  opacity: .82;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+html.light .icon-badge img { opacity: .78; }
+.icon-badge svg {
+  color: rgb(var(--c-gold));
+  width: 100%;
+  height: 100%;
+}
+.icon-badge-lg { height: 3rem; width: 3rem; padding: .7rem; }
+.icon-badge-md { height: 2.25rem; width: 2.25rem; padding: .5rem; }
+.icon-badge-sm { height: 1.9rem; width: 1.9rem; padding: .4rem; }

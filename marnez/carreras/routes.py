@@ -1,0 +1,273 @@
+from flask import (
+    Blueprint, render_template, request, redirect, url_for, flash,
+    send_from_directory, current_app,
+)
+from flask_login import login_user, logout_user, current_user
+
+from ..extensions import db
+from ..models import Usuario, Vacante, Postulacion, AjustesHR, ROL_CAPITAL_HUMANO
+from ..auth import require_rol, gestionar_cuenta
+from ..mail import enviar_notificacion_postulacion
+from .utils import allowed_cv, guardar_cv
+
+carreras_bp = Blueprint("carreras", __name__, template_folder="../templates/carreras")
+
+
+# ---------------------------------------------------------------- público --
+
+@carreras_bp.route("/")
+def index():
+    vacantes = Vacante.query.filter_by(activa=True).order_by(Vacante.creado_en.desc()).all()
+    return render_template("carreras/index.html", vacantes=vacantes)
+
+
+@carreras_bp.route("/<int:vacante_id>")
+def detalle(vacante_id):
+    vacante = Vacante.query.get_or_404(vacante_id)
+    return render_template("carreras/detalle.html", vacante=vacante)
+
+
+@carreras_bp.route("/<int:vacante_id>/postular", methods=["GET", "POST"])
+def postular(vacante_id):
+    vacante = Vacante.query.get_or_404(vacante_id)
+    if not vacante.activa:
+        flash("Esta vacante ya no está disponible, pero puedes enviarnos tu CV.", "warning")
+        return redirect(url_for("carreras.postular_espontanea"))
+    return _procesar_postulacion(vacante=vacante)
+
+
+@carreras_bp.route("/postular-espontanea", methods=["GET", "POST"])
+def postular_espontanea():
+    return _procesar_postulacion(vacante=None)
+
+
+def _procesar_postulacion(vacante):
+    template = "carreras/postular.html"
+    if request.method == "POST":
+        nombre = request.form.get("nombre", "").strip()
+        email = request.form.get("email", "").strip()
+        telefono = request.form.get("telefono", "").strip()
+        puesto_deseado = request.form.get("puesto_deseado", "").strip()
+        mensaje = request.form.get("mensaje", "").strip()
+        cv = request.files.get("cv")
+
+        errores = []
+        if not nombre:
+            errores.append("Tu nombre es obligatorio.")
+        if not email or "@" not in email:
+            errores.append("Ingresa un correo válido.")
+        if not telefono:
+            errores.append("Tu teléfono es obligatorio.")
+        if not cv or cv.filename == "":
+            errores.append("Adjunta tu CV en PDF o Word.")
+        elif not allowed_cv(cv.filename):
+            errores.append("El CV debe ser PDF, DOC o DOCX.")
+
+        if errores:
+            for e in errores:
+                flash(e, "danger")
+            return render_template(template, vacante=vacante, form=request.form), 400
+
+        nombre_guardado, nombre_original = guardar_cv(cv)
+        postulacion = Postulacion(
+            vacante_id=vacante.id if vacante else None,
+            nombre=nombre,
+            email=email,
+            telefono=telefono,
+            puesto_deseado=puesto_deseado or (vacante.titulo if vacante else None),
+            mensaje=mensaje or None,
+            cv_filename=nombre_guardado,
+            cv_nombre_original=nombre_original,
+        )
+        db.session.add(postulacion)
+        db.session.commit()
+
+        # Regla: siempre notifican los correos globales de Ajustes HR.
+        # Si hay vacante, también los correos extra de esa vacante (sin duplicados).
+        destinos = list(AjustesHR.get_or_create().correos_destino())
+        if vacante:
+            for c in vacante.correos_destino():
+                if c not in destinos:
+                    destinos.append(c)
+        enviar_notificacion_postulacion(postulacion, destinos, vacante=vacante)
+
+        flash("¡Postulación enviada! Capital Humano revisará tu perfil pronto.", "success")
+        return redirect(url_for("carreras.index"))
+
+    return render_template(template, vacante=vacante, form={})
+
+
+# ------------------------------------------------------------- HR / login --
+
+@carreras_bp.route("/panel/login", methods=["GET", "POST"])
+def login():
+    if current_user.is_authenticated:
+        if current_user.es_capital_humano and current_user.activo:
+            return redirect(url_for("carreras.panel"))
+        logout_user()
+    if request.method == "POST":
+        email = request.form.get("email", "").strip()
+        password = request.form.get("password", "")
+        usuario = Usuario.query.filter_by(email=email, rol=ROL_CAPITAL_HUMANO).first()
+        if usuario and usuario.activo and usuario.check_password(password):
+            login_user(usuario)
+            flash(f"Bienvenido, {usuario.nombre}.", "success")
+            return redirect(url_for("carreras.panel"))
+        flash("Correo o contraseña incorrectos.", "danger")
+    return render_template("carreras/login.html")
+
+
+@carreras_bp.route("/panel/logout")
+@require_rol(ROL_CAPITAL_HUMANO)
+def logout():
+    logout_user()
+    flash("Sesión cerrada.", "info")
+    return redirect(url_for("carreras.login"))
+
+
+@carreras_bp.route("/panel")
+@require_rol(ROL_CAPITAL_HUMANO)
+def panel():
+    vacantes = Vacante.query.order_by(Vacante.creado_en.desc()).all()
+    total_postulaciones = Postulacion.query.count()
+    return render_template(
+        "carreras/panel.html", vacantes=vacantes, total_postulaciones=total_postulaciones
+    )
+
+
+@carreras_bp.route("/panel/vacantes/nueva", methods=["GET", "POST"])
+@require_rol(ROL_CAPITAL_HUMANO)
+def vacante_nueva():
+    if request.method == "POST":
+        errores = _validar_correos_form(request.form, obligatorio=False)
+        if errores:
+            for e in errores:
+                flash(e, "danger")
+            return render_template("carreras/vacante_form.html", vacante=None, form=request.form), 400
+        vacante = _vacante_desde_form(Vacante(), request.form)
+        vacante.creado_por_id = current_user.id
+        db.session.add(vacante)
+        db.session.commit()
+        flash("Vacante publicada.", "success")
+        return redirect(url_for("carreras.panel"))
+    return render_template("carreras/vacante_form.html", vacante=None, form={})
+
+
+@carreras_bp.route("/panel/vacantes/<int:vacante_id>/editar", methods=["GET", "POST"])
+@require_rol(ROL_CAPITAL_HUMANO)
+def vacante_editar(vacante_id):
+    vacante = Vacante.query.get_or_404(vacante_id)
+    if request.method == "POST":
+        errores = _validar_correos_form(request.form, obligatorio=False)
+        if errores:
+            for e in errores:
+                flash(e, "danger")
+            return render_template(
+                "carreras/vacante_form.html", vacante=vacante, form=request.form
+            ), 400
+        _vacante_desde_form(vacante, request.form)
+        db.session.commit()
+        flash("Vacante actualizada.", "success")
+        return redirect(url_for("carreras.panel"))
+    return render_template("carreras/vacante_form.html", vacante=vacante, form={})
+
+
+@carreras_bp.route("/panel/vacantes/<int:vacante_id>/eliminar", methods=["POST"])
+@require_rol(ROL_CAPITAL_HUMANO)
+def vacante_eliminar(vacante_id):
+    vacante = Vacante.query.get_or_404(vacante_id)
+    db.session.delete(vacante)
+    db.session.commit()
+    flash("Vacante eliminada.", "info")
+    return redirect(url_for("carreras.panel"))
+
+
+@carreras_bp.route("/panel/vacantes/<int:vacante_id>/postulaciones")
+@require_rol(ROL_CAPITAL_HUMANO)
+def vacante_postulaciones(vacante_id):
+    vacante = Vacante.query.get_or_404(vacante_id)
+    postulaciones = vacante.postulaciones.order_by(Postulacion.creado_en.desc()).all()
+    return render_template(
+        "carreras/postulaciones.html", vacante=vacante, postulaciones=postulaciones
+    )
+
+
+@carreras_bp.route("/panel/postulaciones-espontaneas")
+@require_rol(ROL_CAPITAL_HUMANO)
+def postulaciones_espontaneas():
+    postulaciones = (
+        Postulacion.query.filter_by(vacante_id=None).order_by(Postulacion.creado_en.desc()).all()
+    )
+    return render_template(
+        "carreras/postulaciones.html", vacante=None, postulaciones=postulaciones
+    )
+
+
+@carreras_bp.route("/panel/cv/<int:postulacion_id>")
+@require_rol(ROL_CAPITAL_HUMANO)
+def descargar_cv(postulacion_id):
+    postulacion = Postulacion.query.get_or_404(postulacion_id)
+    return send_from_directory(
+        current_app.config["UPLOAD_FOLDER"],
+        postulacion.cv_filename,
+        as_attachment=True,
+        download_name=postulacion.cv_nombre_original,
+    )
+
+
+@carreras_bp.route("/panel/ajustes", methods=["GET", "POST"])
+@require_rol(ROL_CAPITAL_HUMANO)
+def ajustes():
+    ajustes_row = AjustesHR.get_or_create()
+    if request.method == "POST":
+        errores = _validar_correos_form(request.form, obligatorio=True)
+        if errores:
+            for e in errores:
+                flash(e, "danger")
+            return render_template("carreras/ajustes.html", ajustes=ajustes_row), 400
+        ajustes_row.correo_1 = request.form.get("correo_1", "").strip() or None
+        ajustes_row.correo_2 = request.form.get("correo_2", "").strip() or None
+        ajustes_row.correo_3 = request.form.get("correo_3", "").strip() or None
+        db.session.commit()
+        flash("Correos de notificación actualizados. Recibirán CVs espontáneos y postulaciones a vacantes.", "success")
+        return redirect(url_for("carreras.ajustes"))
+    return render_template("carreras/ajustes.html", ajustes=ajustes_row)
+
+
+@carreras_bp.route("/panel/cuenta", methods=["GET", "POST"])
+@require_rol(ROL_CAPITAL_HUMANO)
+def cuenta():
+    return gestionar_cuenta(ROL_CAPITAL_HUMANO, "carreras/cuenta.html", "carreras.cuenta")
+
+
+def _validar_correos_form(form, obligatorio=True) -> list[str]:
+    correos = [
+        form.get("correo_1", "").strip(),
+        form.get("correo_2", "").strip(),
+        form.get("correo_3", "").strip(),
+    ]
+    errores = []
+    llenos = [c for c in correos if c]
+    if obligatorio and not llenos:
+        errores.append("Indica al menos un correo para recibir las postulaciones.")
+    for c in llenos:
+        if "@" not in c or "." not in c.split("@")[-1]:
+            errores.append(f"Correo inválido: {c}")
+    return errores
+
+
+def _vacante_desde_form(vacante: Vacante, form) -> Vacante:
+    vacante.titulo = form.get("titulo", "").strip()
+    vacante.area = form.get("area", "").strip()
+    vacante.ubicacion = form.get("ubicacion", "Mérida, Yucatán").strip()
+    vacante.modalidad = form.get("modalidad", "Presencial").strip()
+    vacante.tipo_contrato = form.get("tipo_contrato", "Tiempo completo").strip()
+    vacante.descripcion = form.get("descripcion", "").strip()
+    vacante.requisitos = form.get("requisitos", "").strip()
+    vacante.ofrecemos = form.get("ofrecemos", "").strip() or None
+    vacante.salario = form.get("salario", "").strip() or None
+    vacante.correo_1 = form.get("correo_1", "").strip() or None
+    vacante.correo_2 = form.get("correo_2", "").strip() or None
+    vacante.correo_3 = form.get("correo_3", "").strip() or None
+    vacante.activa = form.get("activa") == "on"
+    return vacante

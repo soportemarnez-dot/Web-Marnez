@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Acceso Comercial · Marnez{% endblock %}
+
+{% block content %}
+<section class="max-w-md mx-auto px-5 md:px-8 py-24">
+  <p class="uppercase tracking-[0.3em] text-gold text-sm mb-2 text-center">Panel privado</p>
+  <h1 class="font-display text-3xl mb-8 text-center">Acceso Comercial</h1>
+
+  <form method="post" class="space-y-5 rounded-2xl border border-white/10 bg-panel p-8">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div>
+      <label class="block text-sm text-cream/70 mb-2">Correo</label>
+      <input type="email" name="email" required autofocus class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+    </div>
+    <div>
+      <label class="block text-sm text-cream/70 mb-2">Contraseña</label>
+      <input type="password" name="password" required class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+    </div>
+    <button type="submit" class="w-full rounded-full bg-gold px-6 py-3.5 text-ink font-semibold hover:bg-goldlight transition-colors">Entrar</button>
+  </form>
+  <p class="text-center text-cream/40 text-xs mt-6">Acceso exclusivo para el equipo comercial de Marnez.</p>
+</section>
+{% endblock %}

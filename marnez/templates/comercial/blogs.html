@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Blogs · Panel Comercial{% endblock %}
+
+{% block content %}
+<section class="max-w-7xl mx-auto px-5 md:px-8 pt-14 pb-6 flex flex-wrap items-end justify-between gap-4">
+  <div>
+    <a href="{{ url_for('comercial.panel') }}" class="text-gold text-sm hover:text-goldlight">&larr; Panel</a>
+    <h1 class="font-display text-4xl mt-3">Blogs</h1>
+  </div>
+  <a href="{{ url_for('comercial.blog_nuevo') }}" class="rounded-full bg-gold px-5 py-2.5 text-sm text-ink font-semibold hover:bg-goldlight transition-colors">+ Nuevo artículo</a>
+</section>
+
+<section class="max-w-7xl mx-auto px-5 md:px-8 pb-24">
+  <div class="overflow-x-auto rounded-2xl border border-white/10">
+    <table class="w-full text-sm">
+      <thead class="bg-panel text-cream/60 uppercase text-xs tracking-wider">
+        <tr>
+          <th class="text-left px-5 py-4">Título</th>
+          <th class="text-left px-5 py-4">Slug</th>
+          <th class="text-left px-5 py-4">Estado</th>
+          <th class="text-right px-5 py-4">Acciones</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-white/10">
+        {% for p in posts %}
+          <tr class="hover:bg-white/5">
+            <td class="px-5 py-4 font-medium">{{ p.titulo }}</td>
+            <td class="px-5 py-4 text-cream/60">{{ p.slug }}</td>
+            <td class="px-5 py-4">{{ 'Publicado' if p.publicado else 'Borrador' }}</td>
+            <td class="px-5 py-4 text-right space-x-3 whitespace-nowrap">
+              <a href="{{ url_for('main.blog_post', slug=p.slug) }}" target="_blank" class="text-cream/60 hover:text-gold">Ver</a>
+              <a href="{{ url_for('comercial.blog_editar', post_id=p.id) }}" class="text-cream/70 hover:text-gold">Editar</a>
+              <form method="post" action="{{ url_for('comercial.blog_eliminar', post_id=p.id) }}" class="inline" onsubmit="return confirm('¿Eliminar este artículo?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="text-red-300/80 hover:text-red-300">Eliminar</button>
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="4" class="px-5 py-10 text-center text-cream/50">Sin artículos aún.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

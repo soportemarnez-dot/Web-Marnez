@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar blog' if post else 'Nuevo blog' }} · Panel Comercial{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-5 md:px-8 py-16">
+  <a href="{{ url_for('comercial.blogs') }}" class="text-gold text-sm hover:text-goldlight">&larr; Volver a blogs</a>
+  <h1 class="font-display text-4xl mt-6 mb-10">{{ 'Editar artículo' if post else 'Nuevo artículo' }}</h1>
+
+  <div class="grid lg:grid-cols-2 gap-8">
+    <form method="post" enctype="multipart/form-data" id="blog-form" class="space-y-5 rounded-2xl border border-white/10 bg-panel p-8">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Título</label>
+        <input type="text" name="titulo" id="f-titulo" required value="{{ form.get('titulo', post.titulo if post else '') }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+      </div>
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Slug (URL)</label>
+        <input type="text" name="slug" id="f-slug" value="{{ form.get('slug', post.slug if post else '') }}" placeholder="se-genera-del-titulo" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+      </div>
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Resumen</label>
+        <textarea name="resumen" id="f-resumen" rows="2" required class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">{{ form.get('resumen', post.resumen if post else '') }}</textarea>
+      </div>
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Cuerpo</label>
+        <textarea name="cuerpo" id="f-cuerpo" rows="10" required class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">{{ form.get('cuerpo', post.cuerpo if post else '') }}</textarea>
+      </div>
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Tamaño de letra</label>
+        <select name="font_size" id="f-font" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+          {% set fs = form.get('font_size', post.font_size if post else 'base') %}
+          {% for val, label in [('sm','Pequeña'),('base','Normal'),('lg','Grande'),('xl','Extra grande')] %}
+            <option value="{{ val }}" {{ 'selected' if fs == val }}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Imagen de portada</label>
+        {% if post and post.imagen %}
+          <img src="{{ post.imagen | blog_img }}" alt="" class="h-32 w-full object-cover rounded-lg mb-3 border border-white/10">
+        {% endif %}
+        <input type="file" name="imagen" accept="image/*" class="w-full text-sm text-cream/70">
+      </div>
+      <label class="flex items-center gap-3 text-sm text-cream/70">
+        <input type="checkbox" name="publicado" class="h-4 w-4 accent-[#c9a962]" {{ 'checked' if not post or post.publicado }}>
+        Publicado (visible en el sitio)
+      </label>
+      <div class="flex flex-wrap gap-3">
+        <button type="submit" class="rounded-full bg-gold px-6 py-3 text-ink font-semibold hover:bg-goldlight transition-colors">{{ 'Guardar' if post else 'Publicar' }}</button>
+        <button type="button" id="btn-preview" class="rounded-full border border-white/20 px-6 py-3 text-sm hover:border-gold hover:text-gold transition-colors">Previsualizar</button>
+      </div>
+    </form>
+
+    <div class="rounded-2xl border border-white/10 bg-panel overflow-hidden min-h-[480px]">
+      <div class="px-5 py-3 border-b border-white/10 text-xs uppercase tracking-wider text-cream/50">Vista previa</div>
+      <iframe id="preview-frame" title="Preview" class="w-full h-[560px] bg-ink"></iframe>
+    </div>
+  </div>
+</section>
+
+<script>
+(function () {
+  const btn = document.getElementById('btn-preview');
+  const frame = document.getElementById('preview-frame');
+  const form = document.getElementById('blog-form');
+  if (!btn || !frame || !form) return;
+
+  async function refreshPreview() {
+    const fd = new FormData(form);
+    {% if post and post.imagen %}
+    if (!fd.get('imagen') || !fd.get('imagen').name) {
+      fd.set('imagen_preview_url', {{ (post.imagen | blog_img) | tojson }});
+    }
+    {% endif %}
+    const res = await fetch({{ url_for('comercial.blog_preview') | tojson }}, {
+      method: 'POST',
+      body: fd,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    });
+    const html = await res.text();
+    frame.srcdoc = html;
+  }
+
+  btn.addEventListener('click', refreshPreview);
+  ['f-titulo','f-resumen','f-cuerpo','f-font'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', refreshPreview);
+  });
+})();
+</script>
+{% endblock %}

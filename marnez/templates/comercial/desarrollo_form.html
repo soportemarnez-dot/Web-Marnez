@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar desarrollo' if d else 'Nuevo desarrollo' }} · Panel Comercial{% endblock %}
+
+{% block content %}
+<section class="max-w-4xl mx-auto px-5 md:px-8 py-16">
+  <a href="{{ url_for('comercial.desarrollos') }}" class="text-gold text-sm hover:text-goldlight">&larr; Volver a desarrollos</a>
+  <h1 class="font-display text-4xl mt-6 mb-10">{{ 'Editar: ' ~ d.nombre if d else 'Nuevo desarrollo' }}</h1>
+
+  <form method="post" enctype="multipart/form-data" class="space-y-6 rounded-2xl border border-white/10 bg-panel p-8 mb-10">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="grid sm:grid-cols-2 gap-5">
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Nombre</label>
+        <input type="text" name="nombre" required value="{{ form.get('nombre', d.nombre if d else '') }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+      </div>
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Slug</label>
+        <input type="text" name="slug" value="{{ form.get('slug', d.slug if d else '') }}" placeholder="se-genera-del-nombre" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+      </div>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-5">
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Tagline</label>
+        <input type="text" name="tagline" value="{{ form.get('tagline', d.tagline if d and d.tagline else '') }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+      </div>
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Ubicación</label>
+        <input type="text" name="ubicacion" value="{{ form.get('ubicacion', d.ubicacion if d and d.ubicacion else '') }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-sm text-cream/70 mb-2">Resumen</label>
+      <textarea name="resumen" rows="2" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">{{ form.get('resumen', d.resumen if d and d.resumen else '') }}</textarea>
+    </div>
+    <div>
+      <label class="block text-sm text-cream/70 mb-2">Descripción</label>
+      <textarea name="descripcion" rows="5" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">{{ form.get('descripcion', d.descripcion if d and d.descripcion else '') }}</textarea>
+    </div>
+    <div>
+      <label class="block text-sm text-cream/70 mb-2">Amenidades (una por línea)</label>
+      <textarea name="amenidades" rows="5" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">{% if form.get('amenidades') %}{{ form.get('amenidades') }}{% elif d %}{{ d.amenidades | join('\n') }}{% endif %}</textarea>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-5">
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Precio desde (MXN)</label>
+        <input type="number" name="precio_desde" id="f-precio" value="{{ form.get('precio_desde', d.precio_desde if d else 0) }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+      </div>
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Enganche mín. %</label>
+        <input type="number" name="enganche_min_pct" id="f-enganche" min="0" max="100" value="{{ form.get('enganche_min_pct', d.enganche_min_pct if d else 10) }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+      </div>
+    </div>
+
+    <div class="rounded-xl border border-gold/25 bg-ink/40 p-5 space-y-4">
+      <div>
+        <h3 class="font-display text-xl text-gold mb-2">Plazos y cotizador</h3>
+        <p class="text-cream/60 text-sm leading-relaxed">
+          Así calcula el cotizador público la <strong class="text-cream/80">mensualidad estimada</strong>:
+        </p>
+        <ol class="mt-3 text-sm text-cream/65 space-y-1.5 list-decimal list-inside">
+          <li><span class="text-cream/80">Enganche</span> = Precio × (% enganche elegido)</li>
+          <li><span class="text-cream/80">A financiar</span> = Precio − Enganche</li>
+          <li>Si el interés del plazo es <span class="text-cream/80">0%</span>: mensualidad = A financiar ÷ meses</li>
+          <li>Si hay interés: cuota fija tipo amortización francesa
+            <code class="block mt-1 text-xs text-gold/90 bg-black/30 rounded px-2 py-1.5 overflow-x-auto">mensualidad = P × [i(1+i)ⁿ] / [(1+i)ⁿ − 1]</code>
+            donde <em>P</em> es lo financiado, <em>i</em> = interés anual ÷ 12 ÷ 100, y <em>n</em> = meses.
+          </li>
+        </ol>
+        <p class="text-cream/45 text-xs mt-3">Ejemplo: plazo 120 meses al 12% anual → i = 0.01 mensual. Ideal para financiamiento largo (84, 120…). Deja 0% si es pago sin intereses (como 12–48 meses típicos).</p>
+      </div>
+
+      <div class="flex items-center justify-between gap-3">
+        <label class="block text-sm text-cream/70">Plazos de financiamiento</label>
+        <button type="button" id="btn-add-plazo" class="rounded-full border border-gold/40 px-4 py-1.5 text-xs text-gold hover:bg-gold hover:text-ink transition-colors">+ Agregar plazo</button>
+      </div>
+
+      <div id="plazos-rows" class="space-y-3">
+        {% set plazos_from_form = form.getlist('plazo_meses') if form.getlist is defined else [] %}
+        {% if plazos_from_form %}
+          {% set intereses = form.getlist('plazo_interes') %}
+          {% for m in plazos_from_form %}
+            <div class="grid grid-cols-[1fr_1fr_auto] gap-3 items-end plazo-row">
+              <div>
+                <label class="block text-xs text-cream/50 mb-1">Meses</label>
+                <input type="number" name="plazo_meses" min="1" required value="{{ m }}" placeholder="84" class="w-full rounded-lg bg-ink border border-white/15 px-3 py-2.5 focus:border-gold focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs text-cream/50 mb-1">Interés anual %</label>
+                <input type="number" name="plazo_interes" min="0" step="0.01" value="{{ intereses[loop.index0] if intereses|length > loop.index0 else 0 }}" placeholder="0" class="w-full rounded-lg bg-ink border border-white/15 px-3 py-2.5 focus:border-gold focus:outline-none">
+              </div>
+              <button type="button" class="btn-remove-plazo rounded-lg border border-white/15 px-3 py-2.5 text-red-300/80 hover:border-red-400 hover:text-red-300 text-sm" title="Quitar">✕</button>
+            </div>
+          {% endfor %}
+        {% else %}
+          {% set plazos_ui = d.plazos if d and d.plazos else [{'meses': 12, 'interes_anual_pct': 0}, {'meses': 24, 'interes_anual_pct': 0}, {'meses': 36, 'interes_anual_pct': 0}] %}
+          {% for p in plazos_ui %}
+            <div class="grid grid-cols-[1fr_1fr_auto] gap-3 items-end plazo-row">
+              <div>
+                <label class="block text-xs text-cream/50 mb-1">Meses</label>
+                <input type="number" name="plazo_meses" min="1" required value="{{ p.meses }}" placeholder="84" class="w-full rounded-lg bg-ink border border-white/15 px-3 py-2.5 focus:border-gold focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs text-cream/50 mb-1">Interés anual %</label>
+                <input type="number" name="plazo_interes" min="0" step="0.01" value="{{ p.interes_anual_pct }}" placeholder="0" class="w-full rounded-lg bg-ink border border-white/15 px-3 py-2.5 focus:border-gold focus:outline-none">
+              </div>
+              <button type="button" class="btn-remove-plazo rounded-lg border border-white/15 px-3 py-2.5 text-red-300/80 hover:border-red-400 hover:text-red-300 text-sm" title="Quitar">✕</button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      <div class="rounded-lg border border-white/10 bg-black/20 px-4 py-3 text-xs text-cream/55" id="cotizador-demo">
+        Vista rápida: con el enganche mínimo y el primer plazo, la mensualidad estimada sería
+        <span class="text-gold font-semibold" id="demo-mensualidad">—</span>
+        <span class="text-cream/40" id="demo-detalle"></span>
+      </div>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-5">
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Estatus</label>
+        <input type="text" name="estatus" value="{{ form.get('estatus', d.estatus if d and d.estatus else '') }}" placeholder="Disponible · Preventa" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+      </div>
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Orden</label>
+        <input type="number" name="orden" value="{{ form.get('orden', d.orden if d else 0) }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+      </div>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-5">
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Tour 360 (URL)</label>
+        <input type="url" name="tour_360" value="{{ form.get('tour_360', d.tour_360 if d and d.tour_360 else '') }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+      </div>
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">YouTube ID</label>
+        <input type="text" name="video_youtube" value="{{ form.get('video_youtube', d.video_youtube if d and d.video_youtube else '') }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-sm text-cream/70 mb-2">Query de mapa (Google)</label>
+      <input type="text" name="mapa_query" value="{{ form.get('mapa_query', d.mapa_query if d and d.mapa_query else '') }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-5">
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Portada {% if d and d.portada %}<span class="text-cream/40">(actual)</span>{% endif %}</label>
+        {% if d and d.portada %}<img src="{{ d.portada | desarrollo_img(d.slug) }}" class="h-28 w-full object-cover rounded-lg mb-2 border border-white/10" alt="">{% endif %}
+        <input type="file" name="portada" accept="image/*" class="w-full text-sm text-cream/70">
+      </div>
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Masterplan / hero extra</label>
+        {% if d and d.hero_extra %}<img src="{{ d.hero_extra | desarrollo_img(d.slug) }}" class="h-28 w-full object-cover rounded-lg mb-2 border border-white/10" alt="">{% endif %}
+        <input type="file" name="hero_extra" accept="image/*" class="w-full text-sm text-cream/70">
+      </div>
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Imagen de mapa</label>
+        {% if d and d.mapa_img %}<img src="{{ d.mapa_img | desarrollo_img(d.slug) }}" class="h-28 w-full object-cover rounded-lg mb-2 border border-white/10" alt="">{% endif %}
+        <input type="file" name="mapa_img" accept="image/*" class="w-full text-sm text-cream/70">
+      </div>
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Poster de video</label>
+        {% if d and d.video_poster %}<img src="{{ d.video_poster | desarrollo_img(d.slug) }}" class="h-28 w-full object-cover rounded-lg mb-2 border border-white/10" alt="">{% endif %}
+        <input type="file" name="video_poster" accept="image/*" class="w-full text-sm text-cream/70">
+      </div>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-5">
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Video (subir MP4/WEBM)</label>
+        <input type="file" name="video" accept="video/mp4,video/webm" class="w-full text-sm text-cream/70">
+      </div>
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">O nombre en static/video</label>
+        <input type="text" name="video_nombre" value="{% if form.get('video_nombre') %}{{ form.get('video_nombre') }}{% elif d and d.video and not d.video.startswith('media:') %}{{ d.video }}{% endif %}" placeholder="costella-anuncio.mp4" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+      </div>
+    </div>
+
+    <label class="flex items-center gap-3 text-sm text-cream/70">
+      <input type="checkbox" name="activo" class="h-4 w-4 accent-[#c9a962]" {{ 'checked' if not d or d.activo }}>
+      Activo (visible en el sitio)
+    </label>
+
+    <button type="submit" class="w-full rounded-full bg-gold px-6 py-3.5 text-ink font-semibold hover:bg-goldlight transition-colors">{{ 'Guardar cambios' if d else 'Crear desarrollo' }}</button>
+  </form>
+
+  {% if d %}
+  <div class="rounded-2xl border border-white/10 bg-panel p-8">
+    <h2 class="font-display text-2xl mb-4">Galería</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+      {% for img in d.imagenes if img.tipo == 'galeria' %}
+        <div class="relative group rounded-xl overflow-hidden border border-white/10">
+          <img src="{{ img.filename | desarrollo_img(d.slug) }}" alt="" class="aspect-square object-cover w-full">
+          <form method="post" action="{{ url_for('comercial.desarrollo_galeria_eliminar', desarrollo_id=d.id, imagen_id=img.id) }}" class="absolute inset-0 flex items-end justify-center pb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40" onsubmit="return confirm('¿Eliminar imagen?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="rounded-full bg-red-500/90 text-white text-xs px-3 py-1">Eliminar</button>
+          </form>
+        </div>
+      {% else %}
+        <p class="text-cream/50 text-sm col-span-full">Sin imágenes en galería.</p>
+      {% endfor %}
+    </div>
+    <form method="post" action="{{ url_for('comercial.desarrollo_galeria_subir', desarrollo_id=d.id) }}" enctype="multipart/form-data" class="space-y-3">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="file" name="galeria" accept="image/*" multiple required class="w-full text-sm text-cream/70">
+      <button type="submit" class="rounded-full border border-gold/40 px-5 py-2.5 text-sm text-gold hover:bg-gold hover:text-ink transition-colors">Subir a galería</button>
+    </form>
+  </div>
+  {% endif %}
+</section>
+
+<script>
+(function () {
+  const rows = document.getElementById('plazos-rows');
+  const addBtn = document.getElementById('btn-add-plazo');
+  if (!rows || !addBtn) return;
+
+  function rowHtml(meses, interes) {
+    return `<div class="grid grid-cols-[1fr_1fr_auto] gap-3 items-end plazo-row">
+      <div>
+        <label class="block text-xs text-cream/50 mb-1">Meses</label>
+        <input type="number" name="plazo_meses" min="1" required value="${meses}" placeholder="84" class="w-full rounded-lg bg-ink border border-white/15 px-3 py-2.5 focus:border-gold focus:outline-none">
+      </div>
+      <div>
+        <label class="block text-xs text-cream/50 mb-1">Interés anual %</label>
+        <input type="number" name="plazo_interes" min="0" step="0.01" value="${interes}" placeholder="0" class="w-full rounded-lg bg-ink border border-white/15 px-3 py-2.5 focus:border-gold focus:outline-none">
+      </div>
+      <button type="button" class="btn-remove-plazo rounded-lg border border-white/15 px-3 py-2.5 text-red-300/80 hover:border-red-400 hover:text-red-300 text-sm" title="Quitar">✕</button>
+    </div>`;
+  }
+
+  addBtn.addEventListener('click', () => {
+    rows.insertAdjacentHTML('beforeend', rowHtml(84, 12));
+    bindRemove();
+    updateDemo();
+  });
+
+  function bindRemove() {
+    rows.querySelectorAll('.btn-remove-plazo').forEach((btn) => {
+      btn.onclick = () => {
+        if (rows.querySelectorAll('.plazo-row').length <= 1) return;
+        btn.closest('.plazo-row').remove();
+        updateDemo();
+      };
+    });
+    rows.querySelectorAll('input').forEach((inp) => {
+      inp.oninput = updateDemo;
+    });
+  }
+
+  function mensualidad(P, n, anualPct) {
+    if (!P || !n) return 0;
+    const i = (anualPct || 0) / 100 / 12;
+    if (i <= 0) return P / n;
+    const factor = Math.pow(1 + i, n);
+    return P * (i * factor) / (factor - 1);
+  }
+
+  function fmt(n) {
+    return n.toLocaleString('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 });
+  }
+
+  function updateDemo() {
+    const precio = parseFloat(document.getElementById('f-precio')?.value || 0);
+    const eng = parseFloat(document.getElementById('f-enganche')?.value || 0);
+    const first = rows.querySelector('.plazo-row');
+    const out = document.getElementById('demo-mensualidad');
+    const det = document.getElementById('demo-detalle');
+    if (!first || !out) return;
+    const meses = parseInt(first.querySelector('[name="plazo_meses"]').value || 0, 10);
+    const interes = parseFloat(first.querySelector('[name="plazo_interes"]').value || 0);
+    const financiado = precio * (1 - eng / 100);
+    const m = mensualidad(financiado, meses, interes);
+    out.textContent = fmt(m);
+    det.textContent = interes > 0
+      ? `(${meses} meses · ${interes}% anual · enganche ${eng}%)`
+      : `(${meses} meses sin interés · enganche ${eng}%)`;
+  }
+
+  document.getElementById('f-precio')?.addEventListener('input', updateDemo);
+  document.getElementById('f-enganche')?.addEventListener('input', updateDemo);
+  bindRemove();
+  updateDemo();
+})();
+</script>
+{% endblock %}

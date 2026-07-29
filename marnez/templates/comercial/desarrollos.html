@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Desarrollos · Panel Comercial{% endblock %}
+
+{% block content %}
+<section class="max-w-7xl mx-auto px-5 md:px-8 pt-14 pb-6 flex flex-wrap items-end justify-between gap-4">
+  <div>
+    <a href="{{ url_for('comercial.panel') }}" class="text-gold text-sm hover:text-goldlight">&larr; Panel</a>
+    <h1 class="font-display text-4xl mt-3">Desarrollos</h1>
+  </div>
+  <a href="{{ url_for('comercial.desarrollo_nuevo') }}" class="rounded-full bg-gold px-5 py-2.5 text-sm text-ink font-semibold hover:bg-goldlight transition-colors">+ Nuevo desarrollo</a>
+</section>
+
+<section class="max-w-7xl mx-auto px-5 md:px-8 pb-24">
+  <div class="overflow-x-auto rounded-2xl border border-white/10">
+    <table class="w-full text-sm">
+      <thead class="bg-panel text-cream/60 uppercase text-xs tracking-wider">
+        <tr>
+          <th class="text-left px-5 py-4">Nombre</th>
+          <th class="text-left px-5 py-4">Estatus</th>
+          <th class="text-left px-5 py-4">Precio desde</th>
+          <th class="text-left px-5 py-4">Estado</th>
+          <th class="text-right px-5 py-4">Acciones</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-white/10">
+        {% for d in desarrollos %}
+          <tr class="hover:bg-white/5">
+            <td class="px-5 py-4 font-medium">{{ d.nombre }}</td>
+            <td class="px-5 py-4 text-cream/70">{{ d.estatus or '—' }}</td>
+            <td class="px-5 py-4">${{ '{:,.0f}'.format(d.precio_desde) }}</td>
+            <td class="px-5 py-4">{{ 'Activo' if d.activo else 'Oculto' }}</td>
+            <td class="px-5 py-4 text-right space-x-3 whitespace-nowrap">
+              <a href="{{ url_for('main.desarrollo_detalle', slug=d.slug) }}" target="_blank" class="text-cream/60 hover:text-gold">Ver</a>
+              <a href="{{ url_for('comercial.desarrollo_editar', desarrollo_id=d.id) }}" class="text-cream/70 hover:text-gold">Editar</a>
+              <form method="post" action="{{ url_for('comercial.desarrollo_eliminar', desarrollo_id=d.id) }}" class="inline" onsubmit="return confirm('¿Eliminar este desarrollo?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="text-red-300/80 hover:text-red-300">Eliminar</button>
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="5" class="px-5 py-10 text-center text-cream/50">Sin desarrollos.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

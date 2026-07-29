@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% import "partials/icons.html" as icons %}
+{% block title %}{{ d.nombre }} · Marnez Desarrollos{% endblock %}
+{% block description %}{{ d.resumen }}{% endblock %}
+
+{% block content %}
+
+<section class="relative h-[70vh] min-h-[420px] -mt-20 overflow-hidden">
+  <img src="{{ d.portada | desarrollo_img(d.slug) }}" alt="{{ d.nombre }}" class="h-full w-full object-cover">
+  <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/40"></div>
+  <div class="relative z-10 h-full flex items-end">
+    <div class="max-w-7xl mx-auto px-5 md:px-8 pb-14 w-full">
+      <p class="uppercase tracking-[0.3em] text-gold text-sm mb-3" data-aos="fade-up">{{ d.ubicacion }} &middot; {{ d.estatus }}</p>
+      <h1 class="font-display text-5xl md:text-7xl mb-3 text-white" data-aos="fade-up">{{ d.nombre }}</h1>
+      <p class="text-white/80 text-lg max-w-xl" data-aos="fade-up">{{ d.tagline }}</p>
+    </div>
+  </div>
+</section>
+
+<section class="max-w-7xl mx-auto px-5 md:px-8 py-20 grid lg:grid-cols-3 gap-14">
+  <div class="lg:col-span-2">
+    <h2 class="font-display text-3xl mb-5" data-aos="fade-up">Sobre el desarrollo</h2>
+    <p class="text-cream/75 leading-relaxed mb-10" data-aos="fade-up">{{ d.descripcion }}</p>
+
+    {% if d.video %}
+      <h3 class="font-display text-2xl mb-5" data-aos="fade-up">Video</h3>
+      <div class="rounded-2xl overflow-hidden border border-white/10 mb-4" data-aos="fade-up">
+        <video
+          controls
+          preload="none"
+          playsinline
+          {% if d.video_poster %}poster="{{ d.video_poster | desarrollo_img(d.slug) }}"{% endif %}
+          class="w-full h-auto">
+          <source src="{{ d.video | video_url }}" type="video/mp4">
+        </video>
+      </div>
+    {% elif d.video_youtube %}
+      <h3 class="font-display text-2xl mb-5" data-aos="fade-up">Video</h3>
+      <div class="rounded-2xl overflow-hidden border border-white/10 mb-4 aspect-video" data-aos="fade-up">
+        <iframe class="w-full h-full" src="https://www.youtube.com/embed/{{ d.video_youtube }}" title="Video {{ d.nombre }}" loading="lazy" allowfullscreen></iframe>
+      </div>
+    {% endif %}
+
+    {% if d.tour_360 %}
+      <a href="{{ d.tour_360 }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-full border border-gold/40 px-6 py-3 text-gold hover:bg-gold hover:text-ink transition-colors mb-12" data-aos="fade-up">
+        Recorrido virtual 360° &rarr;
+      </a>
+    {% endif %}
+
+    <h3 class="font-display text-2xl mb-5" data-aos="fade-up">Amenidades</h3>
+    <div class="grid sm:grid-cols-2 gap-3 mb-12">
+      {% for a in d.amenidades %}
+        <div class="flex items-center gap-3 rounded-lg border border-white/10 bg-panel px-4 py-3" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 40 }}">
+          <span class="icon-badge icon-badge-sm">{{ icons.render_icon(a|amenity_icon) }}</span>
+          <span class="text-sm text-cream/80">{{ a }}</span>
+        </div>
+      {% endfor %}
+    </div>
+
+    <h3 class="font-display text-2xl mb-5" data-aos="fade-up">Galería</h3>
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      {% for img in galeria %}
+        <button type="button" data-lightbox-src="{{ img }}" class="aspect-square overflow-hidden rounded-xl border border-white/10 group" data-aos="fade-up" data-aos-delay="{{ (loop.index0 % 6) * 40 }}">
+          <img src="{{ img }}" alt="{{ d.nombre }} foto {{ loop.index }}" loading="lazy" class="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500">
+        </button>
+      {% endfor %}
+    </div>
+
+    {% if d.hero_extra %}
+      <h3 class="font-display text-2xl mb-5 mt-12" data-aos="fade-up">Masterplan</h3>
+      <button type="button" data-lightbox-src="{{ d.hero_extra | desarrollo_img(d.slug) }}" class="block rounded-2xl overflow-hidden border border-white/10" data-aos="fade-up">
+        <img src="{{ d.hero_extra | desarrollo_img(d.slug) }}" alt="Masterplan {{ d.nombre }}" class="w-full object-cover">
+      </button>
+    {% endif %}
+
+    {% if d.mapa_img %}
+      <h3 class="font-display text-2xl mb-5 mt-12" data-aos="fade-up">Ubicación</h3>
+      <button type="button" data-lightbox-src="{{ d.mapa_img | desarrollo_img(d.slug) }}" class="block rounded-2xl overflow-hidden border border-white/10 w-full" data-aos="fade-up">
+        <img src="{{ d.mapa_img | desarrollo_img(d.slug) }}" alt="Mapa de ubicación de {{ d.nombre }}" class="w-full object-cover">
+      </button>
+      {% if d.mapa_query %}
+        <a href="https://www.google.com/maps/search/?api=1&query={{ d.mapa_query | urlencode }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-gold text-sm mt-3 hover:text-goldlight">
+          Abrir en Google Maps &rarr;
+        </a>
+      {% endif %}
+    {% elif d.mapa_query %}
+      <h3 class="font-display text-2xl mb-5 mt-12" data-aos="fade-up">Ubicación</h3>
+      <div class="rounded-2xl overflow-hidden border border-white/10 aspect-[16/9]" data-aos="fade-up">
+        <iframe
+          class="w-full h-full grayscale-[35%] contrast-125"
+          loading="lazy"
+          src="https://www.google.com/maps?q={{ d.mapa_query | urlencode }}&output=embed"
+          title="Ubicación de {{ d.nombre }}">
+        </iframe>
+      </div>
+      <p class="text-cream/40 text-xs mt-2">Ubicación aproximada de referencia.</p>
+    {% endif %}
+  </div>
+
+  <!-- COTIZADOR -->
+  <aside class="lg:sticky lg:top-28 h-fit" data-aos="fade-left">
+    <div class="liquid-glass liquid-glass-gold rounded-2xl p-7">
+      <p class="uppercase tracking-[0.25em] text-gold text-xs mb-2">Cotizador</p>
+      <h3 class="font-display text-2xl mb-1">Simula tu inversión</h3>
+      <p class="text-cream/60 text-sm mb-6">Precio desde ${{ '{:,.0f}'.format(d.precio_desde) }} MXN</p>
+
+      <form data-cotizador data-precio="{{ d.precio_desde }}" data-enganche-pct="{{ d.enganche_min_pct }}" class="space-y-6" onsubmit="return false;">
+        <div>
+          <div class="flex justify-between text-sm mb-2">
+            <span class="text-cream/70">Enganche</span>
+            <span data-out-enganche class="text-gold font-semibold"></span>
+          </div>
+          <input type="range" min="{{ d.enganche_min_pct }}" max="60" step="1" value="{{ d.enganche_min_pct }}" data-enganche-pct class="w-full accent-[#c9a962]">
+        </div>
+
+        <div>
+          <label class="block text-sm text-cream/70 mb-2">Plazo de financiamiento</label>
+          <select data-plazo class="w-full rounded-lg bg-ink border border-white/15 px-4 py-2.5 text-cream focus:border-gold focus:outline-none">
+            {% for p in d.plazos %}
+              <option value="{{ p.meses }}" data-interes="{{ p.interes_anual_pct }}">
+                {{ p.meses }} meses{% if p.interes_anual_pct %} · {{ p.interes_anual_pct }}% anual{% else %} · sin interés{% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="border-t border-white/10 pt-5 space-y-3 text-sm">
+          <div class="flex justify-between"><span class="text-cream/60">Monto de enganche</span><span data-out-enganche-monto class="font-semibold"></span></div>
+          <div class="flex justify-between"><span class="text-cream/60">Restante a financiar</span><span data-out-restante class="font-semibold"></span></div>
+          <div class="flex justify-between"><span class="text-cream/60">Tasa del plazo</span><span data-out-tasa class="font-semibold"></span></div>
+          <div class="flex justify-between"><span class="text-cream/60">Total estimado a pagar</span><span data-out-total class="font-semibold"></span></div>
+          <div class="flex justify-between items-baseline pt-2 border-t border-white/10">
+            <span class="text-cream/70">Mensualidad estimada</span>
+            <span data-out-mensualidad class="text-gold text-2xl font-display"></span>
+          </div>
+        </div>
+        <p class="text-[11px] text-cream/40 leading-relaxed">
+          Cálculo referencial: sin interés divide el saldo entre los meses; con interés usa cuota fija
+          (amortización francesa). Sujeto a términos vigentes al momento de la firma.
+        </p>
+      </form>
+
+      <a href="{{ url_for('main.contacto', desarrollo=d.nombre) }}" class="btn-shimmer mt-6 block text-center rounded-full bg-gold px-6 py-3.5 text-ink font-semibold hover:bg-goldlight transition-colors">Quiero que me contacten</a>
+    </div>
+  </aside>
+</section>
+
+{% if otros %}
+<section class="border-t border-white/10 bg-panel">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 py-20">
+    <h2 class="font-display text-3xl mb-10" data-aos="fade-up">Otros desarrollos</h2>
+    <div class="grid md:grid-cols-3 gap-8">
+      {% for o in otros %}
+        <a href="{{ url_for('main.desarrollo_detalle', slug=o.slug) }}" class="card-lift group block rounded-2xl overflow-hidden bg-ink border border-white/10" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+          <div class="aspect-video overflow-hidden">
+            <img src="{{ o.portada | desarrollo_img(o.slug) }}" alt="{{ o.nombre }}" class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700">
+          </div>
+          <div class="p-6">
+            <h3 class="font-display text-xl mb-1">{{ o.nombre }}</h3>
+            <p class="text-cream/60 text-sm">{{ o.tagline }}</p>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

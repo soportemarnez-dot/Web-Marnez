@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Blog · Marnez Desarrollos{% endblock %}
+
+{% block content %}
+<section class="max-w-7xl mx-auto px-5 md:px-8 pt-16 pb-8">
+  <p class="uppercase tracking-[0.3em] text-gold text-sm mb-3" data-aos="fade-up">Blog</p>
+  <h1 class="font-display text-5xl mb-4" data-aos="fade-up">Noticias relevantes</h1>
+</section>
+
+<section class="max-w-7xl mx-auto px-5 md:px-8 pb-24 grid md:grid-cols-3 gap-8">
+  {% for p in posts %}
+    <a href="{{ url_for('main.blog_post', slug=p.slug) }}" class="card-lift group block rounded-2xl overflow-hidden bg-panel border border-white/10" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+      <div class="aspect-video overflow-hidden">
+        <img src="{{ p.imagen | blog_img }}" alt="{{ p.titulo }}" class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700">
+      </div>
+      <div class="p-6">
+        <h2 class="font-display text-xl mb-2">{{ p.titulo }}</h2>
+        <p class="text-cream/60 text-sm mb-4">{{ p.resumen }}</p>
+        <span class="text-gold text-sm">Leer más &rarr;</span>
+      </div>
+    </a>
+  {% endfor %}
+</section>
+{% endblock %}

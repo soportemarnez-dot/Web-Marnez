@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Panel Comercial · Marnez{% endblock %}
+
+{% block content %}
+<section class="max-w-7xl mx-auto px-5 md:px-8 pt-14 pb-6 flex flex-wrap items-end justify-between gap-4">
+  <div>
+    <p class="uppercase tracking-[0.3em] text-gold text-sm mb-2">Panel privado</p>
+    <h1 class="font-display text-4xl">Comercial</h1>
+  </div>
+  <div class="flex flex-wrap gap-3">
+    <a href="{{ url_for('comercial.blogs') }}" class="rounded-full border border-white/20 px-5 py-2.5 text-sm hover:border-gold hover:text-gold transition-colors">Blogs</a>
+    <a href="{{ url_for('comercial.desarrollos') }}" class="rounded-full border border-white/20 px-5 py-2.5 text-sm hover:border-gold hover:text-gold transition-colors">Desarrollos</a>
+    <a href="{{ url_for('comercial.cuenta') }}" class="rounded-full border border-white/20 px-5 py-2.5 text-sm hover:border-gold hover:text-gold transition-colors">Cuenta</a>
+    <a href="{{ url_for('comercial.logout') }}" class="rounded-full border border-white/20 px-5 py-2.5 text-sm hover:border-red-400 hover:text-red-300 transition-colors">Salir</a>
+  </div>
+</section>
+
+<section class="max-w-7xl mx-auto px-5 md:px-8 pb-24 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+  <div class="rounded-2xl border border-white/10 bg-panel p-6">
+    <p class="text-cream/50 text-xs uppercase tracking-wider mb-2">Blogs</p>
+    <p class="font-display text-4xl">{{ total_blogs }}</p>
+    <p class="text-cream/50 text-sm mt-1">{{ blogs_pub }} publicados</p>
+  </div>
+  <div class="rounded-2xl border border-white/10 bg-panel p-6">
+    <p class="text-cream/50 text-xs uppercase tracking-wider mb-2">Desarrollos</p>
+    <p class="font-display text-4xl">{{ total_desarrollos }}</p>
+    <p class="text-cream/50 text-sm mt-1">{{ des_activos }} activos</p>
+  </div>
+  <a href="{{ url_for('comercial.blog_nuevo') }}" class="rounded-2xl border border-gold/30 bg-panel p-6 hover:border-gold transition-colors">
+    <p class="text-gold text-sm mb-2">+ Nuevo blog</p>
+    <p class="text-cream/60 text-sm">Crear artículo con vista previa</p>
+  </a>
+  <a href="{{ url_for('comercial.desarrollo_nuevo') }}" class="rounded-2xl border border-gold/30 bg-panel p-6 hover:border-gold transition-colors">
+    <p class="text-gold text-sm mb-2">+ Nuevo desarrollo</p>
+    <p class="text-cream/60 text-sm">Alta completa con galería</p>
+  </a>
+</section>
+{% endblock %}
