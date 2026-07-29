@@ -91,7 +91,7 @@ RESEND_FROM=Capital Humano <noreply@tudominio-verificado.com>
 
 UPLOAD_FOLDER=uploads/cv
 MEDIA_FOLDER=uploads/media
-MAX_CONTENT_LENGTH_MB=8
+MAX_CONTENT_LENGTH_MB=1024
 ```
 
 Arranque:
