@@ -181,6 +181,53 @@ class Postulacion(db.Model):
         return self.ESTADOS.get(self.estado_key, "Sin revisar")
 
 
+class PlantillaEmail(db.Model):
+    """Plantilla HTML editable para correos a candidatos (CH)."""
+
+    __tablename__ = "plantillas_email"
+
+    TIPO_DESCARTADO = "descartado"
+    TIPO_CIERRE = "cierre_vacante"
+    TIPOS = {
+        TIPO_DESCARTADO: "Agradecimiento al descartar",
+        TIPO_CIERRE: "Cierre / pausa de vacante",
+    }
+    VARIABLES = (
+        ("{{nombre}}", "Nombre del candidato"),
+        ("{{email}}", "Correo del candidato"),
+        ("{{puesto}}", "Puesto deseado o título"),
+        ("{{vacante}}", "Título de la vacante"),
+        ("{{empresa}}", "Nombre de la empresa"),
+        ("{{fecha}}", "Fecha de hoy"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(120), nullable=False)
+    tipo = db.Column(db.String(40), nullable=False, index=True)
+    asunto = db.Column(db.String(200), nullable=False)
+    cuerpo_html = db.Column(db.Text, nullable=False)
+    activa = db.Column(db.Boolean, default=False, nullable=False)
+    creado_en = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
+    actualizado_en = db.Column(
+        db.DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC)
+    )
+
+    @property
+    def tipo_label(self) -> str:
+        return self.TIPOS.get(self.tipo, self.tipo)
+
+    @classmethod
+    def activa_para(cls, tipo: str):
+        return cls.query.filter_by(tipo=tipo, activa=True).first()
+
+    def activar_unica(self) -> None:
+        """Activa esta plantilla y desactiva las demás del mismo tipo."""
+        for otra in self.query.filter_by(tipo=self.tipo, activa=True).all():
+            if otra.id != self.id:
+                otra.activa = False
+        self.activa = True
+
+
 class AjustesHR(db.Model):
     """Configuración global de Capital Humano (correos de notificación)."""
 

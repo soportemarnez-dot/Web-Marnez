@@ -136,6 +136,20 @@
             </form>
           {% endif %}
 
+          {% if ek == 'descartado' %}
+            <button type="button"
+                    class="rounded-full border border-white/20 px-4 py-2 text-sm hover:border-gold hover:text-gold transition-colors"
+                    data-mail-open
+                    data-id="{{ p.id }}"
+                    data-nombre="{{ p.nombre|e }}"
+                    data-email="{{ p.email|e }}"
+                    data-puesto="{{ (p.puesto_deseado or (vacante.titulo if vacante else 'Candidatura espontánea'))|e }}"
+                    data-vacante="{{ (vacante.titulo if vacante else (p.puesto_deseado or 'Candidatura espontánea'))|e }}"
+                    data-enviar-url="{{ url_for('carreras.postulacion_enviar_plantilla', postulacion_id=p.id) }}">
+              Enviar agradecimiento
+            </button>
+          {% endif %}
+
           <select
             class="rounded-full border border-gold/40 bg-ink px-4 py-2.5 text-sm text-gold focus:border-gold focus:outline-none min-w-[11rem]"
             data-cv-accion
@@ -162,6 +176,46 @@
     {% endfor %}
   </div>
 </section>
+
+{# Modal agradecimiento por correo #}
+<div class="cv-modal" id="mail-modal" hidden role="dialog" aria-modal="true" aria-labelledby="mail-modal-title">
+  <div class="cv-modal__backdrop" data-mail-close></div>
+  <div class="cv-modal__panel" role="document" style="height:auto;max-height:92vh">
+    <header class="flex items-start justify-between gap-4 px-5 py-4 border-b border-white/10 shrink-0">
+      <div class="min-w-0">
+        <p class="uppercase tracking-[0.25em] text-gold text-[11px] mb-1">Correo al candidato</p>
+        <h2 id="mail-modal-title" class="font-display text-2xl truncate">Enviar agradecimiento</h2>
+        <p class="text-cream/45 text-xs mt-1" data-mail-to>—</p>
+      </div>
+      <button type="button" data-mail-close class="rounded-full border border-white/20 w-10 h-10 text-lg leading-none hover:border-gold hover:text-gold transition-colors" aria-label="Cerrar">×</button>
+    </header>
+    <div class="px-5 py-4 border-b border-white/10">
+      <p class="text-cream/50 text-xs mb-1">Asunto</p>
+      <p class="text-sm text-cream" data-mail-subject>—</p>
+    </div>
+    <div class="cv-modal__body" style="min-height:280px;max-height:50vh">
+      {% if plantilla_descartado %}
+        <iframe class="cv-modal__frame" data-mail-frame title="Vista previa del correo" style="background:#fff"></iframe>
+      {% else %}
+        <div class="cv-modal__fallback">
+          <p class="font-display text-2xl text-cream">Sin plantilla activa</p>
+          <p class="max-w-md text-sm">Crea o activa una plantilla de tipo «Agradecimiento al descartar».</p>
+          <a href="{{ url_for('carreras.plantillas_lista') }}" class="rounded-full bg-gold px-6 py-3 text-ink font-semibold hover:bg-goldlight transition-colors">Ir a plantillas</a>
+        </div>
+      {% endif %}
+    </div>
+    <footer class="flex flex-wrap justify-end gap-3 px-5 py-4 border-t border-white/10">
+      <button type="button" data-mail-close class="rounded-full border border-white/20 px-5 py-2.5 text-sm hover:border-gold hover:text-gold transition-colors">Ahora no</button>
+      {% if plantilla_descartado %}
+        <form method="post" data-mail-form class="inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="filtro" value="{{ filtro }}">
+          <button type="submit" class="rounded-full bg-gold px-6 py-2.5 text-sm text-ink font-semibold hover:bg-goldlight transition-colors">Confirmar y enviar</button>
+        </form>
+      {% endif %}
+    </footer>
+  </div>
+</div>
 
 {# Modal de previsualización del CV #}
 <div class="cv-modal" id="cv-modal" hidden role="dialog" aria-modal="true" aria-labelledby="cv-modal-title">
@@ -288,6 +342,87 @@
       }
     });
   });
+})();
+
+(function () {
+  var mailModal = document.getElementById("mail-modal");
+  if (!mailModal) return;
+
+  var plantilla = {{ {
+    "asunto": plantilla_descartado.asunto if plantilla_descartado else "",
+    "html": plantilla_descartado.cuerpo_html if plantilla_descartado else "",
+  } | tojson }};
+  var empresa = {{ (empresa_nombre or 'Marnez Desarrollos') | tojson }};
+  var ofrecerId = {{ (ofrecer_mail_id or 0) | tojson }};
+
+  var toEl = mailModal.querySelector("[data-mail-to]");
+  var subjectEl = mailModal.querySelector("[data-mail-subject]");
+  var frame = mailModal.querySelector("[data-mail-frame]");
+  var form = mailModal.querySelector("[data-mail-form]");
+
+  function esc(s) {
+    return String(s || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function renderTpl(texto, ctx, asHtml) {
+    return String(texto || "").replace(/\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}/g, function (_, key) {
+      var val = ctx[key] != null ? String(ctx[key]) : "";
+      return asHtml ? esc(val) : val;
+    });
+  }
+
+  function openMail(btn) {
+    var ctx = {
+      nombre: btn.getAttribute("data-nombre") || "",
+      email: btn.getAttribute("data-email") || "",
+      puesto: btn.getAttribute("data-puesto") || "",
+      vacante: btn.getAttribute("data-vacante") || "",
+      empresa: empresa,
+      fecha: new Date().toLocaleDateString("es-MX"),
+    };
+    toEl.textContent = "Para: " + ctx.nombre + " <" + ctx.email + ">";
+    subjectEl.textContent = renderTpl(plantilla.asunto, ctx, false);
+    if (frame) {
+      var body = renderTpl(plantilla.html, ctx, true);
+      frame.srcdoc = "<!doctype html><html><head><meta charset='utf-8'><style>body{margin:24px;font-family:Georgia,serif;color:#1a1a1a;}</style></head><body>" + body + "</body></html>";
+    }
+    if (form) form.action = btn.getAttribute("data-enviar-url") || "#";
+    mailModal.hidden = false;
+    requestAnimationFrame(function () { mailModal.classList.add("is-open"); });
+    document.body.classList.add("cv-modal-open");
+  }
+
+  function closeMail() {
+    mailModal.classList.remove("is-open");
+    setTimeout(function () {
+      mailModal.hidden = true;
+      document.body.classList.remove("cv-modal-open");
+    }, 180);
+  }
+
+  mailModal.querySelectorAll("[data-mail-close]").forEach(function (el) {
+    el.addEventListener("click", closeMail);
+  });
+
+  document.querySelectorAll("[data-mail-open]").forEach(function (btn) {
+    btn.addEventListener("click", function () { openMail(btn); });
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !mailModal.hidden) {
+      e.preventDefault();
+      closeMail();
+    }
+  });
+
+  if (ofrecerId) {
+    var autoBtn = document.querySelector('[data-mail-open][data-id="' + ofrecerId + '"]');
+    if (autoBtn) openMail(autoBtn);
+  }
 })();
 </script>
 {% endblock %}

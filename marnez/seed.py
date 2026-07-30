@@ -13,6 +13,7 @@ from .models import (
     BlogPost,
     Desarrollo,
     DesarrolloImagen,
+    PlantillaEmail,
     Usuario,
     ROL_CAPITAL_HUMANO,
     ROL_COMERCIAL,
@@ -118,6 +119,64 @@ def seed_admins(app) -> None:
 
     AjustesHR.get_or_create()
     AjustesComercial.get_or_create(defaults=app.config.get("EMPRESA"))
+    seed_plantillas_email(app)
+
+
+def seed_plantillas_email(app) -> None:
+    """Crea plantillas default de agradecimiento si la tabla está vacía."""
+    if PlantillaEmail.query.count() > 0:
+        return
+
+    empresa = (app.config.get("EMPRESA") or {}).get("nombre") or "Marnez Desarrollos"
+
+    descartado_html = (
+        '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#1a1a1a;line-height:1.6">'
+        '<p style="font-size:13px;letter-spacing:0.2em;text-transform:uppercase;color:#b08d57">{{empresa}}</p>'
+        '<h1 style="font-size:26px;font-weight:600;margin:8px 0 20px">Gracias por tu interés</h1>'
+        "<p>Hola <strong>{{nombre}}</strong>,</p>"
+        "<p>Agradecemos el tiempo que dedicaste a postularte para "
+        "<strong>{{vacante}}</strong>.</p>"
+        "<p>En esta ocasión decidimos continuar con otros perfiles, pero conservaremos tu "
+        "información para futuras oportunidades que se alineen con tu experiencia.</p>"
+        "<p>Te deseamos mucho éxito.</p>"
+        f'<p style="margin-top:28px">Atentamente,<br><strong>{empresa}</strong><br>Capital Humano</p>'
+        "</div>"
+    )
+
+    cierre_html = (
+        '<div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#1a1a1a;line-height:1.6">'
+        '<p style="font-size:13px;letter-spacing:0.2em;text-transform:uppercase;color:#b08d57">{{empresa}}</p>'
+        '<h1 style="font-size:26px;font-weight:600;margin:8px 0 20px">Proceso cerrado</h1>'
+        "<p>Hola <strong>{{nombre}}</strong>,</p>"
+        "<p>Te escribimos para informarte que el proceso de selección para "
+        "<strong>{{vacante}}</strong> ha concluido.</p>"
+        "<p>Agradecemos sinceramente tu interés en formar parte de {{empresa}}. "
+        "Valoramos cada postulación y te tendremos presente para próximas vacantes.</p>"
+        "<p>¡Éxito en tus próximos pasos!</p>"
+        f'<p style="margin-top:28px">Atentamente,<br><strong>{empresa}</strong><br>Capital Humano</p>'
+        "</div>"
+    )
+
+    db.session.add(
+        PlantillaEmail(
+            nombre="Agradecimiento al descartar",
+            tipo=PlantillaEmail.TIPO_DESCARTADO,
+            asunto="Gracias por postularte a {{vacante}} — {{empresa}}",
+            cuerpo_html=descartado_html,
+            activa=True,
+        )
+    )
+    db.session.add(
+        PlantillaEmail(
+            nombre="Cierre de vacante",
+            tipo=PlantillaEmail.TIPO_CIERRE,
+            asunto="Actualización sobre {{vacante}} — {{empresa}}",
+            cuerpo_html=cierre_html,
+            activa=True,
+        )
+    )
+    db.session.commit()
+    app.logger.info("Seed: plantillas de correo CH creadas")
 
 
 def seed_content_if_empty(app) -> None:

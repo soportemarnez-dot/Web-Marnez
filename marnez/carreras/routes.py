@@ -8,9 +8,13 @@ from flask_login import login_user, logout_user, current_user
 from sqlalchemy import or_
 
 from ..extensions import db
-from ..models import Usuario, Vacante, Postulacion, AjustesHR, ROL_CAPITAL_HUMANO
+from ..models import Usuario, Vacante, Postulacion, AjustesHR, PlantillaEmail, ROL_CAPITAL_HUMANO
 from ..auth import require_rol, gestionar_cuenta
-from ..mail import enviar_notificacion_postulacion
+from ..mail import (
+    enviar_notificacion_postulacion,
+    enviar_correo_candidato,
+    contexto_ejemplo,
+)
 from .utils import allowed_cv, guardar_cv
 
 carreras_bp = Blueprint("carreras", __name__, template_folder="../templates/carreras")
@@ -216,6 +220,7 @@ def vacante_editar(vacante_id):
 def vacante_toggle(vacante_id):
     """Activa o pone en pausa (no elimina: sirve como plantilla para reactivar)."""
     vacante = Vacante.query.get_or_404(vacante_id)
+    estaba_activa = vacante.activa
     vacante.activa = not vacante.activa
     db.session.commit()
     if vacante.activa:
@@ -225,6 +230,13 @@ def vacante_toggle(vacante_id):
             f"«{vacante.titulo}» en pausa (ya no se muestra en la bolsa; puedes reactivarla después).",
             "info",
         )
+        # Envío masivo de cierre si lo pidieron al pausar
+        if estaba_activa and request.form.get("avisar_candidatos") == "1":
+            enviados, total = _enviar_cierre_vacante(vacante)
+            if total == 0:
+                flash("No hay candidatos con correo para avisar.", "warning")
+            else:
+                flash(f"Correos de cierre: {enviados} de {total} enviados.", "success" if enviados else "warning")
     estado = request.form.get("estado") or request.args.get("estado") or "todas"
     return redirect(url_for("carreras.panel", estado=estado))
 
@@ -300,6 +312,7 @@ def vacante_postulaciones(vacante_id):
         postulaciones=postulaciones,
         filtro=filtro,
         conteos=conteos,
+        **_ctx_mail_postulaciones(),
     )
 
 
@@ -316,6 +329,7 @@ def postulaciones_espontaneas():
         postulaciones=postulaciones,
         filtro=filtro,
         conteos=conteos,
+        **_ctx_mail_postulaciones(),
     )
 
 
@@ -324,6 +338,7 @@ def postulaciones_espontaneas():
 def postulacion_estado(postulacion_id):
     postulacion = Postulacion.query.get_or_404(postulacion_id)
     nuevo = (request.form.get("estado") or "").strip().lower()
+    filtro = request.form.get("filtro") or "todas"
     if nuevo not in Postulacion.ESTADOS:
         flash("Estado no válido.", "danger")
     else:
@@ -331,7 +346,46 @@ def postulacion_estado(postulacion_id):
         db.session.commit()
         flash(f"Marcado como «{Postulacion.ESTADOS[nuevo]}».", "success")
 
+    kwargs = {"filtro": filtro}
+    if nuevo == Postulacion.ESTADO_DESCARTADO:
+        kwargs["filtro"] = "descartado"
+        kwargs["ofrecer_mail"] = postulacion.id
+
+    if postulacion.vacante_id:
+        return redirect(
+            url_for(
+                "carreras.vacante_postulaciones",
+                vacante_id=postulacion.vacante_id,
+                **kwargs,
+            )
+        )
+    return redirect(url_for("carreras.postulaciones_espontaneas", **kwargs))
+
+
+@carreras_bp.route("/panel/postulaciones/<int:postulacion_id>/enviar-plantilla", methods=["POST"])
+@require_rol(ROL_CAPITAL_HUMANO)
+def postulacion_enviar_plantilla(postulacion_id):
+    """Envía la plantilla activa de agradecimiento (descartado) al candidato."""
+    postulacion = Postulacion.query.get_or_404(postulacion_id)
     filtro = request.form.get("filtro") or "todas"
+    plantilla = PlantillaEmail.activa_para(PlantillaEmail.TIPO_DESCARTADO)
+    if not plantilla:
+        flash(
+            "No hay plantilla activa de agradecimiento. Créala o actívala en Plantillas de correo.",
+            "warning",
+        )
+    elif not postulacion.email or "@" not in postulacion.email:
+        flash("El candidato no tiene un correo válido.", "danger")
+    else:
+        vacante = Vacante.query.get(postulacion.vacante_id) if postulacion.vacante_id else None
+        if enviar_correo_candidato(plantilla, postulacion, vacante=vacante):
+            flash(f"Agradecimiento enviado a {postulacion.email}.", "success")
+        else:
+            flash(
+                "No se pudo enviar el correo. Revisa RESEND_API_KEY / RESEND_FROM en el servidor.",
+                "danger",
+            )
+
     if postulacion.vacante_id:
         return redirect(
             url_for(
@@ -440,10 +494,158 @@ def ajustes():
     return render_template("carreras/ajustes.html", ajustes=ajustes_row)
 
 
+@carreras_bp.route("/panel/plantillas")
+@require_rol(ROL_CAPITAL_HUMANO)
+def plantillas_lista():
+    items = PlantillaEmail.query.order_by(PlantillaEmail.tipo, PlantillaEmail.nombre).all()
+    return render_template("carreras/plantillas.html", plantillas=items, tipos=PlantillaEmail.TIPOS)
+
+
+@carreras_bp.route("/panel/plantillas/nueva", methods=["GET", "POST"])
+@require_rol(ROL_CAPITAL_HUMANO)
+def plantilla_nueva():
+    if request.method == "POST":
+        p, errores = _plantilla_desde_form(PlantillaEmail(), request.form)
+        if errores:
+            for e in errores:
+                flash(e, "danger")
+            return render_template(
+                "carreras/plantilla_form.html",
+                plantilla=None,
+                form=request.form,
+                tipos=PlantillaEmail.TIPOS,
+                variables=PlantillaEmail.VARIABLES,
+                ejemplo=contexto_ejemplo(),
+            ), 400
+        db.session.add(p)
+        db.session.flush()
+        if p.activa:
+            p.activar_unica()
+        db.session.commit()
+        flash("Plantilla creada.", "success")
+        return redirect(url_for("carreras.plantillas_lista"))
+    return render_template(
+        "carreras/plantilla_form.html",
+        plantilla=None,
+        form={},
+        tipos=PlantillaEmail.TIPOS,
+        variables=PlantillaEmail.VARIABLES,
+        ejemplo=contexto_ejemplo(),
+    )
+
+
+@carreras_bp.route("/panel/plantillas/<int:plantilla_id>/editar", methods=["GET", "POST"])
+@require_rol(ROL_CAPITAL_HUMANO)
+def plantilla_editar(plantilla_id):
+    plantilla = PlantillaEmail.query.get_or_404(plantilla_id)
+    if request.method == "POST":
+        p, errores = _plantilla_desde_form(plantilla, request.form)
+        if errores:
+            for e in errores:
+                flash(e, "danger")
+            return render_template(
+                "carreras/plantilla_form.html",
+                plantilla=plantilla,
+                form=request.form,
+                tipos=PlantillaEmail.TIPOS,
+                variables=PlantillaEmail.VARIABLES,
+                ejemplo=contexto_ejemplo(),
+            ), 400
+        if p.activa:
+            p.activar_unica()
+        db.session.commit()
+        flash("Plantilla actualizada.", "success")
+        return redirect(url_for("carreras.plantillas_lista"))
+    return render_template(
+        "carreras/plantilla_form.html",
+        plantilla=plantilla,
+        form={},
+        tipos=PlantillaEmail.TIPOS,
+        variables=PlantillaEmail.VARIABLES,
+        ejemplo=contexto_ejemplo(),
+    )
+
+
+@carreras_bp.route("/panel/plantillas/<int:plantilla_id>/activar", methods=["POST"])
+@require_rol(ROL_CAPITAL_HUMANO)
+def plantilla_activar(plantilla_id):
+    plantilla = PlantillaEmail.query.get_or_404(plantilla_id)
+    plantilla.activar_unica()
+    db.session.commit()
+    flash(f"«{plantilla.nombre}» activada para {plantilla.tipo_label}.", "success")
+    return redirect(url_for("carreras.plantillas_lista"))
+
+
+@carreras_bp.route("/panel/plantillas/<int:plantilla_id>/eliminar", methods=["POST"])
+@require_rol(ROL_CAPITAL_HUMANO)
+def plantilla_eliminar(plantilla_id):
+    plantilla = PlantillaEmail.query.get_or_404(plantilla_id)
+    nombre = plantilla.nombre
+    db.session.delete(plantilla)
+    db.session.commit()
+    flash(f"Plantilla «{nombre}» eliminada.", "success")
+    return redirect(url_for("carreras.plantillas_lista"))
+
+
 @carreras_bp.route("/panel/cuenta", methods=["GET", "POST"])
 @require_rol(ROL_CAPITAL_HUMANO)
 def cuenta():
     return gestionar_cuenta(ROL_CAPITAL_HUMANO, "carreras/cuenta.html", "carreras.cuenta")
+
+
+def _ctx_mail_postulaciones() -> dict:
+    """Datos para modal de agradecimiento en la lista de candidatos."""
+    return {
+        "plantilla_descartado": PlantillaEmail.activa_para(PlantillaEmail.TIPO_DESCARTADO),
+        "ofrecer_mail_id": request.args.get("ofrecer_mail", type=int),
+        "empresa_nombre": (current_app.config.get("EMPRESA") or {}).get("nombre")
+        or "Marnez Desarrollos",
+    }
+
+
+def _enviar_cierre_vacante(vacante: Vacante) -> tuple[int, int]:
+    plantilla = PlantillaEmail.activa_para(PlantillaEmail.TIPO_CIERRE)
+    if not plantilla:
+        flash(
+            "No hay plantilla activa de cierre de vacante. Configúrala en Plantillas de correo.",
+            "warning",
+        )
+        return 0, 0
+    candidatos = vacante.postulaciones.all()
+    total = 0
+    enviados = 0
+    for p in candidatos:
+        if not p.email or "@" not in p.email:
+            continue
+        total += 1
+        if enviar_correo_candidato(plantilla, p, vacante=vacante):
+            enviados += 1
+    return enviados, total
+
+
+def _plantilla_desde_form(plantilla: PlantillaEmail, form) -> tuple[PlantillaEmail, list[str]]:
+    errores = []
+    nombre = (form.get("nombre") or "").strip()
+    tipo = (form.get("tipo") or "").strip()
+    asunto = (form.get("asunto") or "").strip()
+    cuerpo = (form.get("cuerpo_html") or "").strip()
+    activa = form.get("activa") == "on"
+    if not nombre:
+        errores.append("El nombre de la plantilla es obligatorio.")
+    if tipo not in PlantillaEmail.TIPOS:
+        errores.append("Selecciona un tipo de plantilla válido.")
+    if not asunto:
+        errores.append("El asunto del correo es obligatorio.")
+    if not cuerpo:
+        errores.append("El cuerpo HTML es obligatorio.")
+    if errores:
+        return plantilla, errores
+    plantilla.nombre = nombre
+    plantilla.tipo = tipo
+    plantilla.asunto = asunto
+    plantilla.cuerpo_html = cuerpo
+    plantilla.activa = activa
+    return plantilla, []
 
 
 def _validar_correos_form(form, obligatorio=True) -> list[str]:

@@ -3,12 +3,57 @@
 from __future__ import annotations
 
 import base64
+import html as html_lib
 import logging
+import re
+from datetime import datetime
 from pathlib import Path
 
 from flask import current_app, url_for
 
 logger = logging.getLogger(__name__)
+
+_VAR_RE = re.compile(r"\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}")
+
+
+def contexto_candidato(postulacion, vacante=None, empresa_nombre: str | None = None) -> dict[str, str]:
+    """Valores para variables de plantilla (sin escapar; se escapan al renderizar)."""
+    vac = vacante or getattr(postulacion, "vacante", None)
+    titulo_vac = vac.titulo if vac else (postulacion.puesto_deseado or "Candidatura espontánea")
+    empresa = empresa_nombre
+    if not empresa:
+        empresa = (current_app.config.get("EMPRESA") or {}).get("nombre") or "Marnez Desarrollos"
+    return {
+        "nombre": postulacion.nombre or "",
+        "email": postulacion.email or "",
+        "puesto": postulacion.puesto_deseado or titulo_vac,
+        "vacante": titulo_vac,
+        "empresa": empresa,
+        "fecha": datetime.now().strftime("%d/%m/%Y"),
+    }
+
+
+def contexto_ejemplo() -> dict[str, str]:
+    empresa = (current_app.config.get("EMPRESA") or {}).get("nombre") or "Marnez Desarrollos"
+    return {
+        "nombre": "Ana Pérez",
+        "email": "ana.perez@email.com",
+        "puesto": "Auxiliar administrativo",
+        "vacante": "Auxiliar administrativo",
+        "empresa": empresa,
+        "fecha": datetime.now().strftime("%d/%m/%Y"),
+    }
+
+
+def render_plantilla(texto: str, contexto: dict[str, str], *, escape: bool = True) -> str:
+    """Reemplaza {{variable}} por valores del contexto. Escape HTML por defecto."""
+
+    def repl(match: re.Match) -> str:
+        key = match.group(1)
+        val = contexto.get(key, "")
+        return html_lib.escape(str(val)) if escape else str(val)
+
+    return _VAR_RE.sub(repl, texto or "")
 
 
 def enviar_email_resend(*, to: list[str], subject: str, html: str, attachments: list | None = None) -> bool:
@@ -38,6 +83,23 @@ def enviar_email_resend(*, to: list[str], subject: str, html: str, attachments: 
         return False
 
 
+def enviar_correo_candidato(plantilla, postulacion, vacante=None) -> bool:
+    """Renderiza plantilla y envía al email del candidato."""
+    ctx = contexto_candidato(postulacion, vacante=vacante)
+    subject = render_plantilla(plantilla.asunto, ctx, escape=False)
+    subject = html_lib.unescape(subject).strip()
+    body = render_plantilla(plantilla.cuerpo_html, ctx, escape=True)
+    ok = enviar_email_resend(to=[postulacion.email], subject=subject, html=body)
+    if ok:
+        logger.info(
+            "Correo plantilla %s enviado a postulación %s (%s)",
+            plantilla.id,
+            postulacion.id,
+            postulacion.email,
+        )
+    return ok
+
+
 def enviar_notificacion_postulacion(postulacion, destinos: list[str], vacante=None) -> bool:
     """Envía aviso a Capital Humano. No lanza; retorna True si al menos un envío ok."""
     if not destinos:
@@ -60,12 +122,12 @@ def enviar_notificacion_postulacion(postulacion, destinos: list[str], vacante=No
 
     html = f"""
     <h2>Nueva postulación recibida</h2>
-    <p><strong>Puesto:</strong> {puesto}</p>
-    <p><strong>Nombre:</strong> {postulacion.nombre}</p>
-    <p><strong>Correo:</strong> {postulacion.email}</p>
-    <p><strong>Teléfono:</strong> {postulacion.telefono}</p>
-    <p><strong>Mensaje:</strong><br>{(postulacion.mensaje or '—').replace(chr(10), '<br>')}</p>
-    <p><a href="{cv_url}">Descargar CV ({postulacion.cv_nombre_original})</a></p>
+    <p><strong>Puesto:</strong> {html_lib.escape(puesto)}</p>
+    <p><strong>Nombre:</strong> {html_lib.escape(postulacion.nombre)}</p>
+    <p><strong>Correo:</strong> {html_lib.escape(postulacion.email)}</p>
+    <p><strong>Teléfono:</strong> {html_lib.escape(postulacion.telefono)}</p>
+    <p><strong>Mensaje:</strong><br>{html_lib.escape(postulacion.mensaje or '—').replace(chr(10), '<br>')}</p>
+    <p><a href="{cv_url}">Descargar CV ({html_lib.escape(postulacion.cv_nombre_original)})</a></p>
     <p><a href="{panel_url}">Ver en el panel de Capital Humano</a></p>
     """
 
@@ -93,11 +155,11 @@ def enviar_notificacion_lead(lead, destinos: list[str]) -> bool:
     subject = f"Nueva solicitud de contacto — {lead.nombre}"
     html = f"""
     <h2>Nueva solicitud de contacto / cotización</h2>
-    <p><strong>Nombre:</strong> {lead.nombre}</p>
-    <p><strong>Correo:</strong> {lead.email}</p>
-    <p><strong>Teléfono:</strong> {lead.telefono}</p>
-    <p><strong>Desarrollo de interés:</strong> {lead.desarrollo_interes or 'No especificado'}</p>
-    <p><strong>Mensaje:</strong><br>{(lead.mensaje or '—').replace(chr(10), '<br>')}</p>
+    <p><strong>Nombre:</strong> {html_lib.escape(lead.nombre)}</p>
+    <p><strong>Correo:</strong> {html_lib.escape(lead.email)}</p>
+    <p><strong>Teléfono:</strong> {html_lib.escape(lead.telefono)}</p>
+    <p><strong>Desarrollo de interés:</strong> {html_lib.escape(lead.desarrollo_interes or 'No especificado')}</p>
+    <p><strong>Mensaje:</strong><br>{html_lib.escape(lead.mensaje or '—').replace(chr(10), '<br>')}</p>
     """
     ok = enviar_email_resend(to=destinos, subject=subject, html=html)
     if ok:

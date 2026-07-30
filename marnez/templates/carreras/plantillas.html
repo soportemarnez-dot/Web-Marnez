@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Plantillas de correo · Capital Humano{% endblock %}
+
+{% block content %}
+<section class="max-w-5xl mx-auto px-5 md:px-8 py-16">
+  <a href="{{ url_for('carreras.panel') }}" class="text-gold text-sm hover:text-goldlight">&larr; Volver al panel</a>
+  <div class="flex flex-wrap items-end justify-between gap-4 mt-6 mb-8">
+    <div>
+      <h1 class="font-display text-4xl mb-2">Plantillas de correo</h1>
+      <p class="text-cream/55 text-sm max-w-xl">Arma el HTML, actívalo y úsalo al descartar candidatos o al pausar una vacante.</p>
+    </div>
+    <a href="{{ url_for('carreras.plantilla_nueva') }}" class="rounded-full bg-gold px-5 py-2.5 text-sm text-ink font-semibold hover:bg-goldlight transition-colors">+ Nueva plantilla</a>
+  </div>
+
+  <div class="space-y-4">
+    {% for p in plantillas %}
+      <article class="rounded-2xl border border-white/10 bg-panel p-5 md:p-6 flex flex-col md:flex-row md:items-center gap-4 justify-between">
+        <div class="min-w-0">
+          <div class="flex flex-wrap items-center gap-2 mb-2">
+            {% if p.activa %}
+              <span class="rounded-full bg-emerald-900/40 border border-emerald-500/40 px-3 py-1 text-xs text-emerald-200">Activa</span>
+            {% else %}
+              <span class="rounded-full bg-white/5 border border-white/15 px-3 py-1 text-xs text-cream/50">Inactiva</span>
+            {% endif %}
+            <span class="rounded-full border border-gold/30 px-3 py-1 text-xs text-gold">{{ tipos.get(p.tipo, p.tipo) }}</span>
+          </div>
+          <h2 class="font-display text-2xl truncate">{{ p.nombre }}</h2>
+          <p class="text-cream/50 text-sm mt-1 truncate">Asunto: {{ p.asunto }}</p>
+        </div>
+        <div class="flex flex-wrap gap-2 shrink-0">
+          <a href="{{ url_for('carreras.plantilla_editar', plantilla_id=p.id) }}" class="rounded-full border border-white/20 px-4 py-2 text-sm hover:border-gold hover:text-gold transition-colors">Editar</a>
+          {% if not p.activa %}
+            <form method="post" action="{{ url_for('carreras.plantilla_activar', plantilla_id=p.id) }}" class="inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="rounded-full border border-emerald-500/40 px-4 py-2 text-sm text-emerald-200 hover:bg-emerald-500/10 transition-colors">Activar</button>
+            </form>
+          {% endif %}
+          <form method="post" action="{{ url_for('carreras.plantilla_eliminar', plantilla_id=p.id) }}" class="inline" onsubmit="return confirm('¿Eliminar esta plantilla?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="rounded-full border border-red-500/40 px-4 py-2 text-sm text-red-200 hover:bg-red-500/10 transition-colors">Eliminar</button>
+          </form>
+        </div>
+      </article>
+    {% else %}
+      <div class="rounded-2xl border border-dashed border-white/15 p-14 text-center text-cream/50">
+        Aún no hay plantillas. Crea la primera para enviar agradecimientos.
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

@@ -9,6 +9,7 @@
   </div>
   <div class="flex flex-wrap gap-3">
     <a href="{{ url_for('carreras.postulaciones_espontaneas') }}" class="rounded-full border border-white/20 px-5 py-2.5 text-sm hover:border-gold hover:text-gold transition-colors">CVs espontáneos</a>
+    <a href="{{ url_for('carreras.plantillas_lista') }}" class="rounded-full border border-white/20 px-5 py-2.5 text-sm hover:border-gold hover:text-gold transition-colors">Plantillas correo</a>
     <a href="{{ url_for('carreras.ajustes') }}" class="rounded-full border border-white/20 px-5 py-2.5 text-sm hover:border-gold hover:text-gold transition-colors">Correos notificación</a>
     <a href="{{ url_for('carreras.cuenta') }}" class="rounded-full border border-white/20 px-5 py-2.5 text-sm hover:border-gold hover:text-gold transition-colors">Cuenta</a>
     <a href="{{ url_for('carreras.vacante_nueva') }}" class="rounded-full bg-gold px-5 py-2.5 text-sm text-ink font-semibold hover:bg-goldlight transition-colors">+ Nueva vacante</a>
@@ -80,6 +81,7 @@
             <form method="post" action="{{ url_for('carreras.vacante_toggle', vacante_id=v.id) }}" class="hidden" data-form-toggle>
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="estado" value="{{ estado }}">
+              <input type="hidden" name="avisar_candidatos" value="0" data-avisar-input>
             </form>
             <form method="post" action="{{ url_for('carreras.vacante_duplicar', vacante_id=v.id) }}" class="hidden" data-form-plantilla>
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -166,7 +168,17 @@
       }
       if (accion === "desactivar" || accion === "reactivar") {
         var fToggle = wrap.querySelector("[data-form-toggle]");
-        if (fToggle) fToggle.submit();
+        if (!fToggle) return;
+        var avisar = fToggle.querySelector("[data-avisar-input]");
+        if (avisar) avisar.value = "0";
+        if (accion === "desactivar" && n > 0) {
+          var quiere = window.confirm(
+            "¿Enviar correo de cierre / agradecimiento a los " + n + " candidato(s) de «" + titulo + "»?\n\n" +
+            "Aceptar = pausar y avisar · Cancelar = solo pausar sin correo."
+          );
+          if (avisar) avisar.value = quiere ? "1" : "0";
+        }
+        fToggle.submit();
         return;
       }
       if (accion === "plantilla") {
