@@ -32,18 +32,21 @@ def detalle(vacante_id):
             "warning",
         )
         return redirect(url_for("carreras.postular_espontanea"))
+
+    # Pausada: el público va a CV espontáneo. Solo CH con ?preview=1 (panel) puede verla.
     if not vacante.activa:
-        # El personal de CH sí puede previsualizar desde el panel.
-        es_hr = (
-            current_user.is_authenticated
+        es_preview_hr = (
+            request.args.get("preview") == "1"
+            and current_user.is_authenticated
             and getattr(current_user, "es_capital_humano", False)
         )
-        if not es_hr:
+        if not es_preview_hr:
             flash(
                 "Esta vacante ya no está disponible. Puedes enviarnos tu CV de forma espontánea.",
                 "warning",
             )
             return redirect(url_for("carreras.postular_espontanea"))
+
     return render_template("carreras/detalle.html", vacante=vacante)
 
 
