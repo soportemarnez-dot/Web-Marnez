@@ -125,6 +125,18 @@ class Postulacion(db.Model):
 
     __tablename__ = "postulaciones"
 
+    # Estados de revisión (estilo OCC / Indeed)
+    ESTADO_NUEVO = "nuevo"
+    ESTADO_INTERES = "interes"
+    ESTADO_DUDA = "duda"
+    ESTADO_DESCARTADO = "descartado"
+    ESTADOS = {
+        ESTADO_NUEVO: "Sin revisar",
+        ESTADO_INTERES: "Me interesa",
+        ESTADO_DUDA: "Por definir",
+        ESTADO_DESCARTADO: "Descartado",
+    }
+
     id = db.Column(db.Integer, primary_key=True)
     vacante_id = db.Column(db.Integer, db.ForeignKey("vacantes.id"), nullable=True)
 
@@ -137,12 +149,26 @@ class Postulacion(db.Model):
     cv_filename = db.Column(db.String(255), nullable=False)
     cv_nombre_original = db.Column(db.String(255), nullable=False)
 
-    estado = db.Column(db.String(30), nullable=False, default="Nuevo")
+    estado = db.Column(db.String(30), nullable=False, default=ESTADO_NUEVO)
     creado_en = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
 
     @property
     def es_espontanea(self) -> bool:
         return self.vacante_id is None
+
+    @property
+    def estado_key(self) -> str:
+        raw = (self.estado or self.ESTADO_NUEVO).strip().lower()
+        # Compatibilidad con valor legacy "Nuevo"
+        if raw in ("nuevo", "new", ""):
+            return self.ESTADO_NUEVO
+        if raw in self.ESTADOS:
+            return raw
+        return self.ESTADO_NUEVO
+
+    @property
+    def estado_label(self) -> str:
+        return self.ESTADOS.get(self.estado_key, "Sin revisar")
 
 
 class AjustesHR(db.Model):

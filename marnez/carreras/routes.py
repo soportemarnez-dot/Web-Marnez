@@ -5,6 +5,7 @@ from flask import (
     send_from_directory, current_app,
 )
 from flask_login import login_user, logout_user, current_user
+from sqlalchemy import or_
 
 from ..extensions import db
 from ..models import Usuario, Vacante, Postulacion, AjustesHR, ROL_CAPITAL_HUMANO
@@ -289,21 +290,57 @@ def vacante_eliminar(vacante_id):
 @require_rol(ROL_CAPITAL_HUMANO)
 def vacante_postulaciones(vacante_id):
     vacante = Vacante.query.get_or_404(vacante_id)
-    postulaciones = vacante.postulaciones.order_by(Postulacion.creado_en.desc()).all()
+    filtro = request.args.get("filtro", "todas")
+    q = vacante.postulaciones
+    postulaciones = _filtrar_postulaciones(q, filtro)
+    conteos = _conteos_postulaciones(vacante.postulaciones)
     return render_template(
-        "carreras/postulaciones.html", vacante=vacante, postulaciones=postulaciones
+        "carreras/postulaciones.html",
+        vacante=vacante,
+        postulaciones=postulaciones,
+        filtro=filtro,
+        conteos=conteos,
     )
 
 
 @carreras_bp.route("/panel/postulaciones-espontaneas")
 @require_rol(ROL_CAPITAL_HUMANO)
 def postulaciones_espontaneas():
-    postulaciones = (
-        Postulacion.query.filter_by(vacante_id=None).order_by(Postulacion.creado_en.desc()).all()
-    )
+    filtro = request.args.get("filtro", "todas")
+    q = Postulacion.query.filter_by(vacante_id=None)
+    postulaciones = _filtrar_postulaciones(q, filtro)
+    conteos = _conteos_postulaciones(Postulacion.query.filter_by(vacante_id=None))
     return render_template(
-        "carreras/postulaciones.html", vacante=None, postulaciones=postulaciones
+        "carreras/postulaciones.html",
+        vacante=None,
+        postulaciones=postulaciones,
+        filtro=filtro,
+        conteos=conteos,
     )
+
+
+@carreras_bp.route("/panel/postulaciones/<int:postulacion_id>/estado", methods=["POST"])
+@require_rol(ROL_CAPITAL_HUMANO)
+def postulacion_estado(postulacion_id):
+    postulacion = Postulacion.query.get_or_404(postulacion_id)
+    nuevo = (request.form.get("estado") or "").strip().lower()
+    if nuevo not in Postulacion.ESTADOS:
+        flash("Estado no válido.", "danger")
+    else:
+        postulacion.estado = nuevo
+        db.session.commit()
+        flash(f"Marcado como «{Postulacion.ESTADOS[nuevo]}».", "success")
+
+    filtro = request.form.get("filtro") or "todas"
+    if postulacion.vacante_id:
+        return redirect(
+            url_for(
+                "carreras.vacante_postulaciones",
+                vacante_id=postulacion.vacante_id,
+                filtro=filtro,
+            )
+        )
+    return redirect(url_for("carreras.postulaciones_espontaneas", filtro=filtro))
 
 
 @carreras_bp.route("/panel/cv/<int:postulacion_id>")
@@ -316,6 +353,41 @@ def descargar_cv(postulacion_id):
         as_attachment=True,
         download_name=postulacion.cv_nombre_original,
     )
+
+
+def _filtrar_postulaciones(query, filtro: str):
+    """Aplica filtro de revisión y ordena por más reciente."""
+    # Compatibilidad con "Nuevo" legacy
+    if filtro == Postulacion.ESTADO_NUEVO:
+        query = query.filter(
+            or_(
+                Postulacion.estado == Postulacion.ESTADO_NUEVO,
+                Postulacion.estado == "Nuevo",
+                Postulacion.estado.is_(None),
+            )
+        )
+    elif filtro in Postulacion.ESTADOS:
+        query = query.filter(Postulacion.estado == filtro)
+    return query.order_by(Postulacion.creado_en.desc()).all()
+
+
+def _conteos_postulaciones(query) -> dict:
+    rows = query.all() if hasattr(query, "all") else list(query)
+    # Si viene un Query de relationship dynamic o filter
+    if not isinstance(rows, list):
+        rows = list(rows)
+    conteos = {
+        "todas": len(rows),
+        Postulacion.ESTADO_NUEVO: 0,
+        Postulacion.ESTADO_INTERES: 0,
+        Postulacion.ESTADO_DUDA: 0,
+        Postulacion.ESTADO_DESCARTADO: 0,
+    }
+    for p in rows:
+        key = p.estado_key
+        if key in conteos:
+            conteos[key] += 1
+    return conteos
 
 
 @carreras_bp.route("/panel/ajustes", methods=["GET", "POST"])

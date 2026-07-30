@@ -7,22 +7,92 @@
   <h1 class="font-display text-4xl mt-6 mb-2">
     {{ 'Candidaturas espontáneas' if vacante is none else 'Postulaciones · ' ~ vacante.titulo }}
   </h1>
-  <p class="text-cream/50 text-sm mb-10">{{ postulaciones|length }} candidato(s)</p>
+  <p class="text-cream/50 text-sm mb-6">{{ conteos.todas }} candidato(s) en total</p>
+
+  {% set base_url = url_for('carreras.postulaciones_espontaneas') if vacante is none else url_for('carreras.vacante_postulaciones', vacante_id=vacante.id) %}
+  <div class="flex flex-wrap gap-2 mb-8">
+    {% for key, label in [
+      ('todas', 'Todas'),
+      ('nuevo', 'Sin revisar'),
+      ('interes', 'Me interesa'),
+      ('duda', 'Por definir'),
+      ('descartado', 'Descartados')
+    ] %}
+      <a href="{{ base_url }}?filtro={{ key }}"
+         class="rounded-full px-4 py-2 text-sm border transition-colors {% if filtro == key %}bg-gold text-ink border-gold font-semibold{% else %}border-white/20 text-cream/70 hover:border-gold hover:text-gold{% endif %}">
+        {{ label }} <span class="opacity-70">({{ conteos[key] }})</span>
+      </a>
+    {% endfor %}
+  </div>
 
   <div class="space-y-4">
     {% for p in postulaciones %}
-      <div class="rounded-2xl border border-white/10 bg-panel p-6 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p class="font-semibold">{{ p.nombre }}</p>
+      {% set ek = p.estado_key %}
+      <div class="rounded-2xl border border-white/10 bg-panel p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+        <div class="min-w-0 flex-1">
+          <div class="flex flex-wrap items-center gap-2 mb-2">
+            {% if ek == 'interes' %}
+              <span class="rounded-full bg-emerald-900/40 border border-emerald-500/40 px-3 py-1 text-xs text-emerald-200">Me interesa</span>
+            {% elif ek == 'duda' %}
+              <span class="rounded-full bg-amber-900/30 border border-amber-500/40 px-3 py-1 text-xs text-amber-200">Por definir</span>
+            {% elif ek == 'descartado' %}
+              <span class="rounded-full bg-red-900/30 border border-red-500/40 px-3 py-1 text-xs text-red-200">Descartado</span>
+            {% else %}
+              <span class="rounded-full bg-white/5 border border-white/15 px-3 py-1 text-xs text-cream/60">Sin revisar</span>
+            {% endif %}
+          </div>
+          <p class="font-semibold text-lg">{{ p.nombre }}</p>
           <p class="text-cream/60 text-sm">{{ p.email }} &middot; {{ p.telefono }}</p>
           {% if p.puesto_deseado %}<p class="text-gold text-xs mt-1 uppercase tracking-wide">{{ p.puesto_deseado }}</p>{% endif %}
           {% if p.mensaje %}<p class="text-cream/70 text-sm mt-3 max-w-xl">{{ p.mensaje }}</p>{% endif %}
           <p class="text-cream/40 text-xs mt-2">{{ p.creado_en.strftime('%d/%m/%Y %H:%M') }}</p>
         </div>
-        <a href="{{ url_for('carreras.descargar_cv', postulacion_id=p.id) }}" class="shrink-0 rounded-full border border-gold/40 px-5 py-2.5 text-sm text-gold hover:bg-gold hover:text-ink transition-colors">Descargar CV</a>
+
+        <div class="flex flex-wrap items-center gap-3 shrink-0">
+          <div class="inline-flex rounded-full border border-white/15 overflow-hidden" role="group" aria-label="Clasificar candidato">
+            <form method="post" action="{{ url_for('carreras.postulacion_estado', postulacion_id=p.id) }}" class="contents">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="filtro" value="{{ filtro }}">
+              <input type="hidden" name="estado" value="interes">
+              <button type="submit" title="Me interesa"
+                      class="w-11 h-11 text-lg leading-none transition-colors {% if ek == 'interes' %}bg-emerald-600 text-white{% else %}text-cream/50 hover:bg-emerald-900/40 hover:text-emerald-200{% endif %}">✓</button>
+            </form>
+            <form method="post" action="{{ url_for('carreras.postulacion_estado', postulacion_id=p.id) }}" class="contents">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="filtro" value="{{ filtro }}">
+              <input type="hidden" name="estado" value="duda">
+              <button type="submit" title="Por definir"
+                      class="w-11 h-11 text-lg leading-none border-x border-white/15 transition-colors {% if ek == 'duda' %}bg-amber-600 text-white{% else %}text-cream/50 hover:bg-amber-900/40 hover:text-amber-200{% endif %}">?</button>
+            </form>
+            <form method="post" action="{{ url_for('carreras.postulacion_estado', postulacion_id=p.id) }}" class="contents">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="filtro" value="{{ filtro }}">
+              <input type="hidden" name="estado" value="descartado">
+              <button type="submit" title="Descartar"
+                      class="w-11 h-11 text-lg leading-none transition-colors {% if ek == 'descartado' %}bg-red-600 text-white{% else %}text-cream/50 hover:bg-red-900/40 hover:text-red-200{% endif %}">✕</button>
+            </form>
+          </div>
+
+          {% if ek != 'nuevo' %}
+            <form method="post" action="{{ url_for('carreras.postulacion_estado', postulacion_id=p.id) }}" class="inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="filtro" value="{{ filtro }}">
+              <input type="hidden" name="estado" value="nuevo">
+              <button type="submit" class="text-xs text-cream/40 hover:text-cream/70 underline underline-offset-2" title="Volver a sin revisar">Quitar marca</button>
+            </form>
+          {% endif %}
+
+          <a href="{{ url_for('carreras.descargar_cv', postulacion_id=p.id) }}" class="rounded-full border border-gold/40 px-5 py-2.5 text-sm text-gold hover:bg-gold hover:text-ink transition-colors">Descargar CV</a>
+        </div>
       </div>
     {% else %}
-      <div class="rounded-2xl border border-dashed border-white/15 p-14 text-center text-cream/50">Todavía no hay postulaciones.</div>
+      <div class="rounded-2xl border border-dashed border-white/15 p-14 text-center text-cream/50">
+        {% if filtro == 'todas' %}
+          Todavía no hay postulaciones.
+        {% else %}
+          No hay candidatos en esta sección.
+        {% endif %}
+      </div>
     {% endfor %}
   </div>
 </section>

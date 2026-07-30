@@ -51,6 +51,16 @@ def ensure_schema(app) -> None:
                 sql = f"ALTER TABLE {table} ADD COLUMN {name} {typedef}"
                 db.session.execute(text(sql))
                 logger.info("Schema: %s", sql)
+        # Normaliza estados legacy de postulaciones
+        if "postulaciones" in existing:
+            present = {c["name"] for c in inspector.get_columns("postulaciones")}
+            if "estado" in present:
+                db.session.execute(
+                    text(
+                        "UPDATE postulaciones SET estado = 'nuevo' "
+                        "WHERE estado IS NULL OR LOWER(estado) IN ('nuevo', 'new')"
+                    )
+                )
         db.session.commit()
 
 
