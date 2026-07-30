@@ -17,47 +17,63 @@
 </section>
 
 <section class="max-w-7xl mx-auto px-5 md:px-8 pb-24">
-  <p class="text-cream/50 text-sm mb-8">{{ vacantes|length }} vacante(s) &middot; {{ total_postulaciones }} postulación(es) en total</p>
+  <p class="text-cream/50 text-sm mb-6">{{ total_postulaciones }} postulación(es) en total · Las vacantes en pausa se conservan como plantilla para reactivarlas</p>
 
-  <div class="overflow-x-auto rounded-2xl border border-white/10">
-    <table class="w-full text-sm">
-      <thead class="bg-panel text-cream/60 uppercase text-xs tracking-wider">
-        <tr>
-          <th class="text-left px-5 py-4">Vacante</th>
-          <th class="text-left px-5 py-4">Área</th>
-          <th class="text-left px-5 py-4">Estado</th>
-          <th class="text-left px-5 py-4">Postulaciones</th>
-          <th class="text-right px-5 py-4">Acciones</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-white/10">
-        {% for v in vacantes %}
-          <tr class="hover:bg-white/5">
-            <td class="px-5 py-4 font-medium">{{ v.titulo }}</td>
-            <td class="px-5 py-4 text-cream/70">{{ v.area }}</td>
-            <td class="px-5 py-4">
+  <div class="flex flex-wrap gap-2 mb-8">
+    {% for key, label in [('todas','Todas'), ('activas','Activas'), ('pausadas','En pausa')] %}
+      <a href="{{ url_for('carreras.panel', estado=key) }}"
+         class="rounded-full px-4 py-2 text-sm border transition-colors {% if estado == key %}bg-gold text-ink border-gold font-semibold{% else %}border-white/20 text-cream/70 hover:border-gold hover:text-gold{% endif %}">
+        {{ label }} <span class="opacity-70">({{ conteos[key] }})</span>
+      </a>
+    {% endfor %}
+  </div>
+
+  <div class="space-y-4">
+    {% for v in vacantes %}
+      <article class="rounded-2xl border border-white/10 bg-panel p-5 md:p-6 flex flex-col lg:flex-row lg:items-center gap-5">
+        <div class="flex-1 min-w-0">
+          <div class="flex flex-wrap items-center gap-2 mb-2">
+            {% if v.activa %}
+              <span class="rounded-full bg-emerald-900/40 border border-emerald-500/40 px-3 py-1 text-xs text-emerald-200">Activa</span>
+            {% else %}
+              <span class="rounded-full bg-amber-900/30 border border-amber-500/40 px-3 py-1 text-xs text-amber-200">En pausa</span>
+            {% endif %}
+            <span class="text-cream/40 text-xs">#{{ v.id }}</span>
+          </div>
+          <h2 class="font-display text-2xl mb-1 truncate">{{ v.titulo }}</h2>
+          <p class="text-cream/60 text-sm mb-3">{{ v.area }} · {{ v.ubicacion }} · {{ v.modalidad }}</p>
+          <p class="text-cream/45 text-xs">
+            Creada el {{ v.creado_en_fmt }}
+            {% if v.salario_display %} · {{ v.salario_display }}{% endif %}
+          </p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center gap-4 lg:gap-6 shrink-0">
+          <a href="{{ url_for('carreras.vacante_postulaciones', vacante_id=v.id) }}" class="text-center rounded-xl border border-white/10 px-4 py-3 hover:border-gold/40 transition-colors">
+            <p class="text-2xl font-display text-gold">{{ v.total_postulaciones }}</p>
+            <p class="text-xs text-cream/50 uppercase tracking-wider">Candidatos</p>
+          </a>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ url_for('carreras.detalle', vacante_id=v.id) }}" target="_blank" class="rounded-full border border-white/20 px-4 py-2 text-sm hover:border-gold hover:text-gold transition-colors">Vista previa</a>
+            <a href="{{ url_for('carreras.vacante_editar', vacante_id=v.id) }}" class="rounded-full border border-white/20 px-4 py-2 text-sm hover:border-gold hover:text-gold transition-colors">Editar</a>
+            <form method="post" action="{{ url_for('carreras.vacante_toggle', vacante_id=v.id) }}" class="inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="estado" value="{{ estado }}">
               {% if v.activa %}
-                <span class="rounded-full bg-emerald-900/40 border border-emerald-500/40 px-3 py-1 text-xs text-emerald-200">Activa</span>
+                <button type="submit" class="rounded-full border border-amber-500/40 px-4 py-2 text-sm text-amber-200 hover:bg-amber-500/10 transition-colors" title="Ocultar de la bolsa sin borrar">Pausar</button>
               {% else %}
-                <span class="rounded-full bg-white/10 border border-white/20 px-3 py-1 text-xs text-cream/60">Cerrada</span>
+                <button type="submit" class="rounded-full border border-emerald-500/40 px-4 py-2 text-sm text-emerald-200 hover:bg-emerald-500/10 transition-colors" title="Volver a publicar">Reactivar</button>
               {% endif %}
-            </td>
-            <td class="px-5 py-4">
-              <a href="{{ url_for('carreras.vacante_postulaciones', vacante_id=v.id) }}" class="text-gold hover:text-goldlight">{{ v.total_postulaciones }} candidato(s)</a>
-            </td>
-            <td class="px-5 py-4 text-right space-x-3 whitespace-nowrap">
-              <a href="{{ url_for('carreras.vacante_editar', vacante_id=v.id) }}" class="text-cream/70 hover:text-gold">Editar</a>
-              <form method="post" action="{{ url_for('carreras.vacante_eliminar', vacante_id=v.id) }}" class="inline" onsubmit="return confirm('¿Eliminar esta vacante y sus postulaciones?');">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="text-red-300/80 hover:text-red-300">Eliminar</button>
-              </form>
-            </td>
-          </tr>
-        {% else %}
-          <tr><td colspan="5" class="px-5 py-10 text-center text-cream/50">Aún no has publicado vacantes.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
+            </form>
+          </div>
+        </div>
+      </article>
+    {% else %}
+      <div class="rounded-2xl border border-dashed border-white/15 p-14 text-center text-cream/50">
+        {% if estado == 'activas' %}No hay vacantes activas.{% elif estado == 'pausadas' %}No hay vacantes en pausa.{% else %}Aún no has publicado vacantes.{% endif %}
+      </div>
+    {% endfor %}
   </div>
 </section>
 {% endblock %}

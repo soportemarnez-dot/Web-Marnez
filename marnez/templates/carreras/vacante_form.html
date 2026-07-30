@@ -46,7 +46,8 @@
 
     <div>
       <label class="block text-sm text-cream/70 mb-2">Rango salarial (opcional)</label>
-      <input type="text" name="salario" value="{{ form.get('salario', vacante.salario if vacante and vacante.salario else '') }}" placeholder="Ej. $12,000 - $15,000 MXN mensuales" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+      <input type="text" name="salario" value="{{ form.get('salario', vacante.salario if vacante and vacante.salario else '') }}" placeholder="Ej. 10000 o 12000-15000" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+      <p class="text-cream/40 text-xs mt-1.5">Si pones un número (ej. 10000), en la web se verá como <span class="text-gold">$10,000</span>.</p>
     </div>
 
     <div>
@@ -79,9 +80,12 @@
       </div>
     </fieldset>
 
-    <label class="flex items-center gap-3 text-sm text-cream/70">
-      <input type="checkbox" name="activa" class="h-4 w-4 accent-[#c9a962]" {{ 'checked' if form.get('activa') == 'on' or (not form and (not vacante or vacante.activa)) or (vacante and vacante.activa and not form) }}>
-      Vacante activa (visible públicamente)
+    <label class="flex items-start gap-3 text-sm text-cream/70">
+      <input type="checkbox" name="activa" class="h-4 w-4 mt-0.5 accent-[#c9a962]" {{ 'checked' if form.get('activa') == 'on' or (not form and (not vacante or vacante.activa)) or (vacante and vacante.activa and not form) }}>
+      <span>
+        <strong class="text-cream/90">Vacante activa</strong> (visible en la bolsa pública).<br>
+        <span class="text-cream/45 text-xs">Si la desmarcas queda en pausa: no se elimina y puedes reactivarla después como plantilla.</span>
+      </span>
     </label>
 
     <button type="submit" class="w-full rounded-full bg-gold px-6 py-3.5 text-ink font-semibold hover:bg-goldlight transition-colors">{{ 'Guardar cambios' if vacante else 'Publicar vacante' }}</button>

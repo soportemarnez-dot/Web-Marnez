@@ -1,5 +1,6 @@
 from datetime import datetime, UTC
 import json
+import re
 
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -72,6 +73,33 @@ class Vacante(db.Model):
 
     def correos_destino(self) -> list[str]:
         return [c for c in (self.correo_1, self.correo_2, self.correo_3) if c and "@" in c]
+
+    @property
+    def salario_display(self) -> str | None:
+        """Formatea números sueltos como $10,000; deja texto libre igual."""
+        if not self.salario:
+            return None
+        raw = str(self.salario).strip()
+        # Solo dígitos / separadores → formato moneda
+        if re.fullmatch(r"[\d\s,\.]+", raw):
+            digits = re.sub(r"[^\d]", "", raw)
+            if digits:
+                return f"${int(digits):,}"
+        # Si ya trae $ pero es un solo número, normalizar
+        if re.fullmatch(r"\$?\s*[\d\s,\.]+", raw):
+            digits = re.sub(r"[^\d]", "", raw)
+            if digits:
+                return f"${int(digits):,}"
+        return raw
+
+    @property
+    def creado_en_fmt(self) -> str:
+        if not self.creado_en:
+            return "—"
+        dt = self.creado_en
+        if getattr(dt, "tzinfo", None) is not None:
+            dt = dt.replace(tzinfo=None)
+        return dt.strftime("%d/%m/%Y")
 
 
 class Postulacion(db.Model):

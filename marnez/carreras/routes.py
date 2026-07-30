@@ -128,10 +128,25 @@ def logout():
 @carreras_bp.route("/panel")
 @require_rol(ROL_CAPITAL_HUMANO)
 def panel():
-    vacantes = Vacante.query.order_by(Vacante.creado_en.desc()).all()
+    estado = request.args.get("estado", "todas")
+    q = Vacante.query.order_by(Vacante.creado_en.desc())
+    if estado == "activas":
+        q = q.filter_by(activa=True)
+    elif estado == "pausadas":
+        q = q.filter_by(activa=False)
+    vacantes = q.all()
     total_postulaciones = Postulacion.query.count()
+    conteos = {
+        "todas": Vacante.query.count(),
+        "activas": Vacante.query.filter_by(activa=True).count(),
+        "pausadas": Vacante.query.filter_by(activa=False).count(),
+    }
     return render_template(
-        "carreras/panel.html", vacantes=vacantes, total_postulaciones=total_postulaciones
+        "carreras/panel.html",
+        vacantes=vacantes,
+        total_postulaciones=total_postulaciones,
+        estado=estado,
+        conteos=conteos,
     )
 
 
@@ -172,14 +187,22 @@ def vacante_editar(vacante_id):
     return render_template("carreras/vacante_form.html", vacante=vacante, form={})
 
 
-@carreras_bp.route("/panel/vacantes/<int:vacante_id>/eliminar", methods=["POST"])
+@carreras_bp.route("/panel/vacantes/<int:vacante_id>/toggle", methods=["POST"])
 @require_rol(ROL_CAPITAL_HUMANO)
-def vacante_eliminar(vacante_id):
+def vacante_toggle(vacante_id):
+    """Activa o pone en pausa (no elimina: sirve como plantilla para reactivar)."""
     vacante = Vacante.query.get_or_404(vacante_id)
-    db.session.delete(vacante)
+    vacante.activa = not vacante.activa
     db.session.commit()
-    flash("Vacante eliminada.", "info")
-    return redirect(url_for("carreras.panel"))
+    if vacante.activa:
+        flash(f"«{vacante.titulo}» reactivada y visible públicamente.", "success")
+    else:
+        flash(
+            f"«{vacante.titulo}» en pausa (ya no se muestra en la bolsa; puedes reactivarla después).",
+            "info",
+        )
+    estado = request.form.get("estado") or request.args.get("estado") or "todas"
+    return redirect(url_for("carreras.panel", estado=estado))
 
 
 @carreras_bp.route("/panel/vacantes/<int:vacante_id>/postulaciones")
