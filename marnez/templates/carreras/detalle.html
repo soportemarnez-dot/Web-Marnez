@@ -35,6 +35,18 @@
     {% endif %}
   </div>
 
+  {% if vacante.enlaces_externos() %}
+    <div class="mt-8 rounded-2xl border border-white/10 bg-panel p-6 space-y-3" data-aos="fade-up">
+      <p class="text-sm text-cream/60 mb-1">También puedes postularte en:</p>
+      {% for link in vacante.enlaces_externos() %}
+        <a href="{{ link.url }}" target="_blank" rel="noopener" class="flex items-center justify-between gap-3 rounded-xl border border-white/10 px-4 py-3 text-sm hover:border-gold hover:text-gold transition-colors">
+          <span>{{ link.nombre }}</span>
+          <span aria-hidden="true">&rarr;</span>
+        </a>
+      {% endfor %}
+    </div>
+  {% endif %}
+
   <div class="mt-12" data-aos="fade-up">
     {% if vacante.activa %}
       <a href="{{ url_for('carreras.postular', vacante_id=vacante.id) }}" class="inline-flex items-center gap-2 rounded-full bg-gold px-8 py-3.5 text-ink font-semibold hover:bg-goldlight transition-colors">Postularme a esta vacante</a>

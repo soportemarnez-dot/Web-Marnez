@@ -205,6 +205,39 @@ def vacante_toggle(vacante_id):
     return redirect(url_for("carreras.panel", estado=estado))
 
 
+@carreras_bp.route("/panel/vacantes/<int:vacante_id>/duplicar", methods=["POST"])
+@require_rol(ROL_CAPITAL_HUMANO)
+def vacante_duplicar(vacante_id):
+    """Crea una nueva vacante copiando una existente (plantilla). Queda en pausa para editar."""
+    origen = Vacante.query.get_or_404(vacante_id)
+    nueva = Vacante(
+        titulo=f"{origen.titulo} (nueva)",
+        area=origen.area,
+        ubicacion=origen.ubicacion,
+        modalidad=origen.modalidad,
+        tipo_contrato=origen.tipo_contrato,
+        descripcion=origen.descripcion,
+        requisitos=origen.requisitos,
+        ofrecemos=origen.ofrecemos,
+        salario=origen.salario,
+        correo_1=origen.correo_1,
+        correo_2=origen.correo_2,
+        correo_3=origen.correo_3,
+        enlace_occ=origen.enlace_occ,
+        enlace_extra_nombre=origen.enlace_extra_nombre,
+        enlace_extra_url=origen.enlace_extra_url,
+        activa=False,
+        creado_por_id=current_user.id,
+    )
+    db.session.add(nueva)
+    db.session.commit()
+    flash(
+        "Plantilla duplicada. Ajusta título, salario u otros datos y reactívala cuando esté lista.",
+        "success",
+    )
+    return redirect(url_for("carreras.vacante_editar", vacante_id=nueva.id))
+
+
 @carreras_bp.route("/panel/vacantes/<int:vacante_id>/postulaciones")
 @require_rol(ROL_CAPITAL_HUMANO)
 def vacante_postulaciones(vacante_id):
@@ -292,5 +325,8 @@ def _vacante_desde_form(vacante: Vacante, form) -> Vacante:
     vacante.correo_1 = form.get("correo_1", "").strip() or None
     vacante.correo_2 = form.get("correo_2", "").strip() or None
     vacante.correo_3 = form.get("correo_3", "").strip() or None
+    vacante.enlace_occ = form.get("enlace_occ", "").strip() or None
+    vacante.enlace_extra_nombre = form.get("enlace_extra_nombre", "").strip() or None
+    vacante.enlace_extra_url = form.get("enlace_extra_url", "").strip() or None
     vacante.activa = form.get("activa") == "on"
     return vacante

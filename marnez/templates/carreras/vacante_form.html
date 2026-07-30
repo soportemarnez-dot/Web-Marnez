@@ -63,6 +63,25 @@
       <textarea name="ofrecemos" rows="3" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">{{ form.get('ofrecemos', vacante.ofrecemos if vacante and vacante.ofrecemos else '') }}</textarea>
     </div>
 
+    <fieldset class="space-y-4 rounded-xl border border-white/15 p-5">
+      <legend class="px-2 text-sm text-gold">Enlaces en otras páginas (opcional)</legend>
+      <p class="text-cream/50 text-xs -mt-2 mb-2">Se muestran en la ficha pública para que el candidato también pueda postularse en OCC u otro portal.</p>
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Link OCC Mundial</label>
+        <input type="url" name="enlace_occ" value="{{ form.get('enlace_occ', vacante.enlace_occ if vacante and vacante.enlace_occ else '') }}" placeholder="https://www.occ.com.mx/..." class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+      </div>
+      <div class="grid sm:grid-cols-2 gap-5">
+        <div>
+          <label class="block text-sm text-cream/70 mb-2">Nombre del otro enlace</label>
+          <input type="text" name="enlace_extra_nombre" value="{{ form.get('enlace_extra_nombre', vacante.enlace_extra_nombre if vacante and vacante.enlace_extra_nombre else '') }}" placeholder="Computrabajo, Indeed..." class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-sm text-cream/70 mb-2">URL del otro enlace</label>
+          <input type="url" name="enlace_extra_url" value="{{ form.get('enlace_extra_url', vacante.enlace_extra_url if vacante and vacante.enlace_extra_url else '') }}" placeholder="https://..." class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+        </div>
+      </div>
+    </fieldset>
+
     <fieldset class="space-y-4 rounded-xl border border-gold/20 p-5">
       <legend class="px-2 text-sm text-gold">Correos extra de esta vacante (opcional)</legend>
       <p class="text-cream/50 text-xs -mt-2 mb-2">Los correos globales de <a href="{{ url_for('carreras.ajustes') }}" class="text-gold hover:text-goldlight">notificación</a> siempre reciben. Aquí puedes sumar hasta 3 más solo para este puesto.</p>

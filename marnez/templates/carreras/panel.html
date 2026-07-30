@@ -57,6 +57,10 @@
           <div class="flex flex-wrap items-center gap-2">
             <a href="{{ url_for('carreras.detalle', vacante_id=v.id) }}" target="_blank" class="rounded-full border border-white/20 px-4 py-2 text-sm hover:border-gold hover:text-gold transition-colors">Vista previa</a>
             <a href="{{ url_for('carreras.vacante_editar', vacante_id=v.id) }}" class="rounded-full border border-white/20 px-4 py-2 text-sm hover:border-gold hover:text-gold transition-colors">Editar</a>
+            <form method="post" action="{{ url_for('carreras.vacante_duplicar', vacante_id=v.id) }}" class="inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="rounded-full border border-white/20 px-4 py-2 text-sm hover:border-gold hover:text-gold transition-colors" title="Crear una copia para reutilizar esta plantilla">Usar plantilla</button>
+            </form>
             <form method="post" action="{{ url_for('carreras.vacante_toggle', vacante_id=v.id) }}" class="inline">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="estado" value="{{ estado }}">

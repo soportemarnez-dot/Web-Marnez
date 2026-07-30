@@ -55,6 +55,10 @@ class Vacante(db.Model):
     correo_1 = db.Column(db.String(160), nullable=True)
     correo_2 = db.Column(db.String(160), nullable=True)
     correo_3 = db.Column(db.String(160), nullable=True)
+    # Enlaces a otras plataformas (OCC, Computrabajo, etc.)
+    enlace_occ = db.Column(db.String(500), nullable=True)
+    enlace_extra_nombre = db.Column(db.String(80), nullable=True)
+    enlace_extra_url = db.Column(db.String(500), nullable=True)
     activa = db.Column(db.Boolean, default=True, nullable=False)
     creado_en = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
     actualizado_en = db.Column(
@@ -100,6 +104,20 @@ class Vacante(db.Model):
         if getattr(dt, "tzinfo", None) is not None:
             dt = dt.replace(tzinfo=None)
         return dt.strftime("%d/%m/%Y")
+
+    def enlaces_externos(self) -> list[dict]:
+        """Lista de {nombre, url} para la ficha pública."""
+        links = []
+        if self.enlace_occ:
+            links.append({"nombre": "Ver en OCC", "url": self.enlace_occ})
+        if self.enlace_extra_url:
+            links.append(
+                {
+                    "nombre": self.enlace_extra_nombre or "Otra publicación",
+                    "url": self.enlace_extra_url,
+                }
+            )
+        return links
 
 
 class Postulacion(db.Model):

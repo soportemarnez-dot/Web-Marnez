@@ -30,6 +30,9 @@ _ALTERS = {
         ("correo_1", "VARCHAR(160)"),
         ("correo_2", "VARCHAR(160)"),
         ("correo_3", "VARCHAR(160)"),
+        ("enlace_occ", "VARCHAR(500)"),
+        ("enlace_extra_nombre", "VARCHAR(80)"),
+        ("enlace_extra_url", "VARCHAR(500)"),
     ],
 }
 
