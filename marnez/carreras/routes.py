@@ -25,14 +25,32 @@ def index():
 
 @carreras_bp.route("/<int:vacante_id>")
 def detalle(vacante_id):
-    vacante = Vacante.query.get_or_404(vacante_id)
+    vacante = Vacante.query.get(vacante_id)
+    if vacante is None:
+        flash(
+            "Esta vacante ya no está disponible. Puedes enviarnos tu CV de forma espontánea.",
+            "warning",
+        )
+        return redirect(url_for("carreras.postular_espontanea"))
+    if not vacante.activa:
+        # El personal de CH sí puede previsualizar desde el panel.
+        es_hr = (
+            current_user.is_authenticated
+            and getattr(current_user, "es_capital_humano", False)
+        )
+        if not es_hr:
+            flash(
+                "Esta vacante ya no está disponible. Puedes enviarnos tu CV de forma espontánea.",
+                "warning",
+            )
+            return redirect(url_for("carreras.postular_espontanea"))
     return render_template("carreras/detalle.html", vacante=vacante)
 
 
 @carreras_bp.route("/<int:vacante_id>/postular", methods=["GET", "POST"])
 def postular(vacante_id):
-    vacante = Vacante.query.get_or_404(vacante_id)
-    if not vacante.activa:
+    vacante = Vacante.query.get(vacante_id)
+    if vacante is None or not vacante.activa:
         flash("Esta vacante ya no está disponible, pero puedes enviarnos tu CV.", "warning")
         return redirect(url_for("carreras.postular_espontanea"))
     return _procesar_postulacion(vacante=vacante)
