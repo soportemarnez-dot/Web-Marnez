@@ -56,13 +56,25 @@ def render_plantilla(texto: str, contexto: dict[str, str], *, escape: bool = Tru
     return _VAR_RE.sub(repl, texto or "")
 
 
+def _normalizar_from(raw: str) -> str:
+    """Limpia comillas y espacios del remitente Resend."""
+    val = (raw or "").strip()
+    if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
+        val = val[1:-1].strip()
+    return val
+
+
 def enviar_email_resend(*, to: list[str], subject: str, html: str, attachments: list | None = None) -> bool:
     if not to:
         return False
-    api_key = current_app.config.get("RESEND_API_KEY") or ""
-    from_addr = current_app.config.get("RESEND_FROM") or ""
+    api_key = (current_app.config.get("RESEND_API_KEY") or "").strip()
+    from_addr = _normalizar_from(current_app.config.get("RESEND_FROM") or "")
     if not api_key or not from_addr:
-        logger.warning("Resend no configurado; omitiendo email.")
+        logger.warning(
+            "Resend no configurado (API_KEY=%s, FROM=%r); omitiendo email.",
+            "sí" if api_key else "no",
+            from_addr or "(vacío)",
+        )
         return False
     try:
         import resend
@@ -78,8 +90,15 @@ def enviar_email_resend(*, to: list[str], subject: str, html: str, attachments: 
             params["attachments"] = attachments
         resend.Emails.send(params)
         return True
-    except Exception:
-        logger.exception("Error enviando email Resend: %s", subject)
+    except Exception as exc:
+        # Resend suele devolver el motivo en el mensaje (dominio, API key, from inválido).
+        logger.exception(
+            "Error enviando email Resend (from=%r, to=%s, subject=%s): %s",
+            from_addr,
+            to[:3],
+            subject,
+            exc,
+        )
         return False
 
 

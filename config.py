@@ -26,8 +26,13 @@ class Config:
     COMERCIAL_EMAIL = os.environ.get("COMERCIAL_EMAIL", "comercial@marnez.mx")
     COMERCIAL_PASSWORD = os.environ.get("COMERCIAL_PASSWORD", "marnez2026")
 
-    RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
-    RESEND_FROM = os.environ.get("RESEND_FROM", "")
+    RESEND_API_KEY = (os.environ.get("RESEND_API_KEY") or "").strip()
+    _from = (os.environ.get("RESEND_FROM") or "").strip()
+    if (_from.startswith('"') and _from.endswith('"')) or (
+        _from.startswith("'") and _from.endswith("'")
+    ):
+        _from = _from[1:-1].strip()
+    RESEND_FROM = _from
 
     EMPRESA = {
         "nombre": "Marnez Desarrollos",
