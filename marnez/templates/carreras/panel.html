@@ -63,8 +63,10 @@
               data-titulo="{{ v.titulo|e }}"
               data-postulaciones="{{ v.total_postulaciones }}"
               data-editar="{{ url_for('carreras.vacante_editar', vacante_id=v.id) }}"
+              data-link="{{ url_for('carreras.detalle', vacante_id=v.id, _external=True) }}"
               aria-label="Acciones de la vacante">
               <option value="">Acciones</option>
+              <option value="copiar">Copiar link</option>
               <option value="editar">Editar</option>
               {% if v.activa %}
                 <option value="desactivar">Desactivar</option>
@@ -101,6 +103,44 @@
 {% block scripts %}
 <script>
 (function () {
+  function toast(msg, ok) {
+    var box = document.querySelector(".fixed.top-24.right-4") || (function () {
+      var d = document.createElement("div");
+      d.className = "fixed top-24 right-4 z-[100] flex flex-col gap-2 w-[92%] max-w-sm";
+      document.body.appendChild(d);
+      return d;
+    })();
+    var el = document.createElement("div");
+    el.className = "toast rounded-lg px-4 py-3 shadow-xl text-sm font-medium border " +
+      (ok ? "bg-emerald-900/90 border-emerald-500 text-emerald-100" : "bg-red-900/90 border-red-500 text-red-100");
+    el.textContent = msg;
+    box.appendChild(el);
+    setTimeout(function () { el.remove(); }, 2800);
+  }
+
+  function copiarTexto(texto) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(texto);
+    }
+    return new Promise(function (resolve, reject) {
+      var ta = document.createElement("textarea");
+      ta.value = texto;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand("copy");
+        resolve();
+      } catch (err) {
+        reject(err);
+      } finally {
+        ta.remove();
+      }
+    });
+  }
+
   document.querySelectorAll("[data-vacante-acciones]").forEach(function (sel) {
     sel.addEventListener("change", function () {
       var accion = sel.value;
@@ -111,6 +151,15 @@
       var titulo = sel.getAttribute("data-titulo") || "esta vacante";
       var n = parseInt(sel.getAttribute("data-postulaciones") || "0", 10);
 
+      if (accion === "copiar") {
+        var link = sel.getAttribute("data-link") || "";
+        copiarTexto(link).then(function () {
+          toast("Link copiado. Ya puedes pegarlo y enviarlo.", true);
+        }).catch(function () {
+          window.prompt("Copia este link de la vacante:", link);
+        });
+        return;
+      }
       if (accion === "editar") {
         window.location.href = sel.getAttribute("data-editar");
         return;
