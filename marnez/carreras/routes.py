@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from flask import (
     Blueprint, render_template, request, redirect, url_for, flash,
     send_from_directory, current_app,
@@ -236,6 +238,30 @@ def vacante_duplicar(vacante_id):
         "success",
     )
     return redirect(url_for("carreras.vacante_editar", vacante_id=nueva.id))
+
+
+@carreras_bp.route("/panel/vacantes/<int:vacante_id>/eliminar", methods=["POST"])
+@require_rol(ROL_CAPITAL_HUMANO)
+def vacante_eliminar(vacante_id):
+    """Elimina la vacante y sus postulaciones (incluidos CV en disco)."""
+    vacante = Vacante.query.get_or_404(vacante_id)
+    titulo = vacante.titulo
+    n = vacante.total_postulaciones
+    upload = Path(current_app.config["UPLOAD_FOLDER"])
+    for p in vacante.postulaciones.all():
+        if p.cv_filename:
+            cv_path = upload / p.cv_filename
+            if cv_path.is_file():
+                try:
+                    cv_path.unlink()
+                except OSError:
+                    pass
+    db.session.delete(vacante)
+    db.session.commit()
+    extra = f" Se eliminaron también {n} postulación(es)." if n else ""
+    flash(f"Vacante «{titulo}» eliminada.{extra}", "success")
+    estado = request.form.get("estado") or "todas"
+    return redirect(url_for("carreras.panel", estado=estado))
 
 
 @carreras_bp.route("/panel/vacantes/<int:vacante_id>/postulaciones")

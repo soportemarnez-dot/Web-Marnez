@@ -56,19 +56,35 @@
 
           <div class="flex flex-wrap items-center gap-2">
             <a href="{{ url_for('carreras.detalle', vacante_id=v.id) }}" target="_blank" class="rounded-full border border-white/20 px-4 py-2 text-sm hover:border-gold hover:text-gold transition-colors">Vista previa</a>
-            <a href="{{ url_for('carreras.vacante_editar', vacante_id=v.id) }}" class="rounded-full border border-white/20 px-4 py-2 text-sm hover:border-gold hover:text-gold transition-colors">Editar</a>
-            <form method="post" action="{{ url_for('carreras.vacante_duplicar', vacante_id=v.id) }}" class="inline">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit" class="rounded-full border border-white/20 px-4 py-2 text-sm hover:border-gold hover:text-gold transition-colors" title="Crear una copia para reutilizar esta plantilla">Usar plantilla</button>
-            </form>
-            <form method="post" action="{{ url_for('carreras.vacante_toggle', vacante_id=v.id) }}" class="inline">
+
+            <select
+              class="rounded-full border border-white/20 bg-ink px-4 py-2 text-sm text-cream focus:border-gold focus:outline-none min-w-[10.5rem]"
+              data-vacante-acciones
+              data-titulo="{{ v.titulo|e }}"
+              data-postulaciones="{{ v.total_postulaciones }}"
+              data-editar="{{ url_for('carreras.vacante_editar', vacante_id=v.id) }}"
+              aria-label="Acciones de la vacante">
+              <option value="">Acciones</option>
+              <option value="editar">Editar</option>
+              {% if v.activa %}
+                <option value="desactivar">Desactivar</option>
+              {% else %}
+                <option value="reactivar">Reactivar</option>
+              {% endif %}
+              <option value="plantilla">Usar plantilla</option>
+              <option value="eliminar">Eliminar…</option>
+            </select>
+
+            <form method="post" action="{{ url_for('carreras.vacante_toggle', vacante_id=v.id) }}" class="hidden" data-form-toggle>
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="estado" value="{{ estado }}">
-              {% if v.activa %}
-                <button type="submit" class="rounded-full border border-amber-500/40 px-4 py-2 text-sm text-amber-200 hover:bg-amber-500/10 transition-colors" title="Ocultar de la bolsa sin borrar">Pausar</button>
-              {% else %}
-                <button type="submit" class="rounded-full border border-emerald-500/40 px-4 py-2 text-sm text-emerald-200 hover:bg-emerald-500/10 transition-colors" title="Volver a publicar">Reactivar</button>
-              {% endif %}
+            </form>
+            <form method="post" action="{{ url_for('carreras.vacante_duplicar', vacante_id=v.id) }}" class="hidden" data-form-plantilla>
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            </form>
+            <form method="post" action="{{ url_for('carreras.vacante_eliminar', vacante_id=v.id) }}" class="hidden" data-form-eliminar>
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="estado" value="{{ estado }}">
             </form>
           </div>
         </div>
@@ -80,4 +96,52 @@
     {% endfor %}
   </div>
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  document.querySelectorAll("[data-vacante-acciones]").forEach(function (sel) {
+    sel.addEventListener("change", function () {
+      var accion = sel.value;
+      sel.value = "";
+      if (!accion) return;
+
+      var wrap = sel.parentElement;
+      var titulo = sel.getAttribute("data-titulo") || "esta vacante";
+      var n = parseInt(sel.getAttribute("data-postulaciones") || "0", 10);
+
+      if (accion === "editar") {
+        window.location.href = sel.getAttribute("data-editar");
+        return;
+      }
+      if (accion === "desactivar" || accion === "reactivar") {
+        var fToggle = wrap.querySelector("[data-form-toggle]");
+        if (fToggle) fToggle.submit();
+        return;
+      }
+      if (accion === "plantilla") {
+        var fPlantilla = wrap.querySelector("[data-form-plantilla]");
+        if (fPlantilla) fPlantilla.submit();
+        return;
+      }
+      if (accion === "eliminar") {
+        var extra = n > 0
+          ? " También se borrarán " + n + " postulación(es) y sus CVs."
+          : "";
+        var ok1 = window.confirm(
+          "¿Eliminar «" + titulo + "»?" + extra + "\n\nEsta acción no se puede deshacer."
+        );
+        if (!ok1) return;
+        var ok2 = window.confirm(
+          "Confirmación final: ¿seguro que quieres eliminar permanentemente «" + titulo + "»?"
+        );
+        if (!ok2) return;
+        var fEliminar = wrap.querySelector("[data-form-eliminar]");
+        if (fEliminar) fEliminar.submit();
+      }
+    });
+  });
+})();
+</script>
 {% endblock %}
