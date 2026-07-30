@@ -52,6 +52,18 @@
     gap: 1rem; padding: 2rem; text-align: center; color: rgba(255,255,255,0.75);
   }
   body.cv-modal-open { overflow: hidden; }
+
+  /* Modal de agradecimiento: casi pantalla completa */
+  .cv-modal__panel--mail {
+    width: min(1400px, 98vw);
+    height: min(96vh, 1100px);
+    max-height: 96vh;
+  }
+  .cv-modal__panel--mail .cv-modal__body {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+  }
 </style>
 {% endblock %}
 
@@ -180,20 +192,20 @@
 {# Modal agradecimiento por correo #}
 <div class="cv-modal" id="mail-modal" hidden role="dialog" aria-modal="true" aria-labelledby="mail-modal-title">
   <div class="cv-modal__backdrop" data-mail-close></div>
-  <div class="cv-modal__panel" role="document" style="height:auto;max-height:92vh">
-    <header class="flex items-start justify-between gap-4 px-5 py-4 border-b border-white/10 shrink-0">
+  <div class="cv-modal__panel cv-modal__panel--mail" role="document">
+    <header class="flex items-start justify-between gap-4 px-5 md:px-6 py-4 border-b border-white/10 shrink-0">
       <div class="min-w-0">
         <p class="uppercase tracking-[0.25em] text-gold text-[11px] mb-1">Correo al candidato</p>
-        <h2 id="mail-modal-title" class="font-display text-2xl truncate">Enviar agradecimiento</h2>
+        <h2 id="mail-modal-title" class="font-display text-2xl md:text-3xl truncate">Enviar agradecimiento</h2>
         <p class="text-cream/45 text-xs mt-1" data-mail-to>—</p>
       </div>
       <button type="button" data-mail-close class="rounded-full border border-white/20 w-10 h-10 text-lg leading-none hover:border-gold hover:text-gold transition-colors" aria-label="Cerrar">×</button>
     </header>
-    <div class="px-5 py-4 border-b border-white/10">
+    <div class="px-5 md:px-6 py-3 border-b border-white/10 shrink-0">
       <p class="text-cream/50 text-xs mb-1">Asunto</p>
-      <p class="text-sm text-cream" data-mail-subject>—</p>
+      <p class="text-sm md:text-base text-cream" data-mail-subject>—</p>
     </div>
-    <div class="cv-modal__body" style="min-height:280px;max-height:50vh">
+    <div class="cv-modal__body">
       {% if plantilla_descartado %}
         <iframe class="cv-modal__frame" data-mail-frame title="Vista previa del correo" style="background:#fff"></iframe>
       {% else %}
@@ -204,7 +216,7 @@
         </div>
       {% endif %}
     </div>
-    <footer class="flex flex-wrap justify-end gap-3 px-5 py-4 border-t border-white/10">
+    <footer class="flex flex-wrap justify-end gap-3 px-5 md:px-6 py-4 border-t border-white/10 shrink-0">
       <button type="button" data-mail-close class="rounded-full border border-white/20 px-5 py-2.5 text-sm hover:border-gold hover:text-gold transition-colors">Ahora no</button>
       {% if plantilla_descartado %}
         <form method="post" data-mail-form class="inline">
@@ -375,6 +387,12 @@
     });
   }
 
+  function toPreviewDoc(html) {
+    var t = String(html || "").trim();
+    if (/^<!DOCTYPE/i.test(t) || /<html[\s>]/i.test(t)) return t;
+    return "<!doctype html><html><head><meta charset='utf-8'><style>body{margin:0;padding:24px;font-family:Georgia,serif;color:#1a1a1a;}</style></head><body>" + t + "</body></html>";
+  }
+
   function openMail(btn) {
     var ctx = {
       nombre: btn.getAttribute("data-nombre") || "",
@@ -387,8 +405,7 @@
     toEl.textContent = "Para: " + ctx.nombre + " <" + ctx.email + ">";
     subjectEl.textContent = renderTpl(plantilla.asunto, ctx, false);
     if (frame) {
-      var body = renderTpl(plantilla.html, ctx, true);
-      frame.srcdoc = "<!doctype html><html><head><meta charset='utf-8'><style>body{margin:24px;font-family:Georgia,serif;color:#1a1a1a;}</style></head><body>" + body + "</body></html>";
+      frame.srcdoc = toPreviewDoc(renderTpl(plantilla.html, ctx, true));
     }
     if (form) form.action = btn.getAttribute("data-enviar-url") || "#";
     mailModal.hidden = false;

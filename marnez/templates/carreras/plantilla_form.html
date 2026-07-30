@@ -81,9 +81,14 @@
           {% endfor %}
         </div>
         <label class="block text-sm text-cream/70 mb-2">Cuerpo HTML</label>
-        <textarea name="cuerpo_html" id="tpl-cuerpo" rows="16" required
+        <p class="text-cream/45 text-xs mb-2 leading-relaxed">
+          Puedes pegar HTML completo con <code class="text-gold/80">&lt;style&gt;</code> (por ejemplo de ChatGPT).
+          Usa variables como <code class="text-gold/80">{{ '{{nombre}}' }}</code> donde quieras personalizar.
+          También acepta un documento completo (<code class="text-gold/80">&lt;!DOCTYPE html&gt;…</code>).
+        </p>
+        <textarea name="cuerpo_html" id="tpl-cuerpo" rows="18" required
                   class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 font-mono text-sm focus:border-gold focus:outline-none"
-                  placeholder="<p>Hola {{ '{{nombre}}' }}, ...</p>">{% set cuerpo_val = f.get('cuerpo_html', plantilla.cuerpo_html if plantilla else '') %}{{ cuerpo_val }}</textarea>
+                  placeholder="<!DOCTYPE html> o un fragmento con estilos…">{% set cuerpo_val = f.get('cuerpo_html', plantilla.cuerpo_html if plantilla else '') %}{{ cuerpo_val }}</textarea>
       </div>
 
       <label class="flex items-center gap-3 text-sm text-cream/80 cursor-pointer">
@@ -145,16 +150,18 @@
     });
   }
 
+  function toPreviewDoc(html) {
+    var t = String(html || "").trim();
+    if (/^<!DOCTYPE/i.test(t) || /<html[\s>]/i.test(t)) return t;
+    return "<!doctype html><html><head><meta charset='utf-8'><style>body{margin:0;padding:24px;font-family:Georgia,serif;color:#1a1a1a;}</style></head><body>" + t + "</body></html>";
+  }
+
   function updatePreview() {
-    var asu = renderVars(asuntoEl.value).replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").replace(/&quot;/g, '"');
-    // Asunto sin HTML: deshacer escape básico
-    asu = asuntoEl.value.replace(/\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}/g, function (_, key) {
+    var asu = asuntoEl.value.replace(/\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}/g, function (_, key) {
       return ejemplo[key] != null ? String(ejemplo[key]) : "";
     });
     previewSubject.textContent = "Asunto: " + asu;
-    var html = renderVars(cuerpoEl.value);
-    var doc = "<!doctype html><html><head><meta charset='utf-8'><style>body{margin:24px;font-family:Georgia,serif;color:#1a1a1a;}</style></head><body>" + html + "</body></html>";
-    preview.srcdoc = doc;
+    preview.srcdoc = toPreviewDoc(renderVars(cuerpoEl.value));
   }
 
   var timer;
