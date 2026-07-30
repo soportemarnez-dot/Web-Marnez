@@ -157,6 +157,16 @@ class Postulacion(db.Model):
         return self.vacante_id is None
 
     @property
+    def cv_extension(self) -> str:
+        name = (self.cv_nombre_original or self.cv_filename or "").rsplit(".", 1)
+        return name[-1].lower() if len(name) == 2 else ""
+
+    @property
+    def cv_se_puede_previsualizar(self) -> bool:
+        """PDF se puede ver en el navegador; Word requiere descarga."""
+        return self.cv_extension == "pdf"
+
+    @property
     def estado_key(self) -> str:
         raw = (self.estado or self.ESTADO_NUEVO).strip().lower()
         # Compatibilidad con valor legacy "Nuevo"

@@ -2,7 +2,7 @@ from pathlib import Path
 
 from flask import (
     Blueprint, render_template, request, redirect, url_for, flash,
-    send_from_directory, current_app,
+    send_from_directory, send_file, current_app,
 )
 from flask_login import login_user, logout_user, current_user
 from sqlalchemy import or_
@@ -353,6 +353,37 @@ def descargar_cv(postulacion_id):
         as_attachment=True,
         download_name=postulacion.cv_nombre_original,
     )
+
+
+@carreras_bp.route("/panel/cv/<int:postulacion_id>/ver")
+@require_rol(ROL_CAPITAL_HUMANO)
+def ver_cv(postulacion_id):
+    """Sirve el CV en línea (inline) para el modal de previsualización."""
+    postulacion = Postulacion.query.get_or_404(postulacion_id)
+    path = Path(current_app.config["UPLOAD_FOLDER"]) / postulacion.cv_filename
+    if not path.is_file():
+        flash("No se encontró el archivo del CV.", "danger")
+        return redirect(url_for("carreras.panel"))
+
+    ext = postulacion.cv_extension
+    mime = {
+        "pdf": "application/pdf",
+        "doc": "application/msword",
+        "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    }.get(ext, "application/octet-stream")
+
+    resp = send_file(
+        path,
+        mimetype=mime,
+        as_attachment=False,
+        download_name=postulacion.cv_nombre_original,
+        conditional=True,
+    )
+    resp.headers["Content-Disposition"] = (
+        f'inline; filename="{postulacion.cv_nombre_original}"'
+    )
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    return resp
 
 
 def _filtrar_postulaciones(query, filtro: str):
