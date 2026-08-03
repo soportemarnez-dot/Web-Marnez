@@ -75,6 +75,18 @@ def create_app(config_class=Config):
                 "unete_eyebrow": d["unete_eyebrow"],
                 "unete_titulo": d["unete_titulo"],
                 "unete_texto": d["unete_texto"],
+                "hero_eyebrow": d["hero_eyebrow"],
+                "hero_titulo": d["hero_titulo"],
+                "hero_texto": d["hero_texto"],
+                "desarrollos_eyebrow": d["desarrollos_eyebrow"],
+                "desarrollos_titulo": d["desarrollos_titulo"],
+                "entregados_eyebrow": d["entregados_eyebrow"],
+                "entregados_titulo": d["entregados_titulo"],
+                "nosotros_eyebrow": d["nosotros_eyebrow"],
+                "nosotros_titulo": d["nosotros_titulo"],
+                "nosotros_texto": d["nosotros_texto"],
+                "nosotros_imagen": url_for("static", filename=d["static_nosotros"]),
+                "home_secciones": list(AjustesDiseno.HOME_SECCIONES_DEFAULT),
             }
         return {"empresa": empresa, "diseno": diseno, "now_year": datetime.now(UTC).year}
 

@@ -98,6 +98,44 @@ def diseno_ajustes():
         row.unete_titulo = (request.form.get("unete_titulo") or "").strip() or None
         row.unete_texto = (request.form.get("unete_texto") or "").strip() or None
 
+        for field in (
+            "hero_eyebrow",
+            "hero_titulo",
+            "hero_texto",
+            "desarrollos_eyebrow",
+            "desarrollos_titulo",
+            "entregados_eyebrow",
+            "entregados_titulo",
+            "nosotros_eyebrow",
+            "nosotros_titulo",
+            "nosotros_texto",
+        ):
+            val = (request.form.get(field) or "").strip()
+            setattr(row, field, val or None)
+
+        # Secciones del inicio: orden + visible (solo si el formulario las envía)
+        if any(k.startswith("sec_orden_") for k in request.form):
+            secciones = []
+            for default in AjustesDiseno.HOME_SECCIONES_DEFAULT:
+                sid = default["id"]
+                try:
+                    orden = int(request.form.get(f"sec_orden_{sid}", default["orden"]))
+                except (TypeError, ValueError):
+                    orden = default["orden"]
+                visible = request.form.get(f"sec_visible_{sid}") == "on"
+                secciones.append(
+                    {
+                        "id": sid,
+                        "label": default["label"],
+                        "visible": visible,
+                        "orden": orden,
+                    }
+                )
+            secciones.sort(key=lambda s: s["orden"])
+            for i, s in enumerate(secciones):
+                s["orden"] = i
+            row.home_secciones = secciones
+
         img_fields = [
             "logo_oscuro",
             "logo_claro",
@@ -107,6 +145,7 @@ def diseno_ajustes():
             "hero_3",
             "hero_4",
             "unete_imagen",
+            "nosotros_imagen",
         ]
         for field in img_fields:
             if request.form.get(f"quitar_{field}") == "1":
@@ -266,7 +305,30 @@ def blog_preview():
 @require_rol(ROL_COMERCIAL)
 def desarrollos():
     items = Desarrollo.query.order_by(Desarrollo.orden.asc(), Desarrollo.nombre.asc()).all()
-    return render_template("comercial/desarrollos.html", desarrollos=items)
+    return render_template(
+        "comercial/desarrollos.html",
+        desarrollos=items,
+        categorias=Desarrollo.CATEGORIAS,
+    )
+
+
+@comercial_bp.route("/desarrollos/<int:desarrollo_id>/categoria", methods=["POST"])
+@require_rol(ROL_COMERCIAL)
+def desarrollo_categoria(desarrollo_id):
+    d = db.session.get(Desarrollo, desarrollo_id)
+    if d is None:
+        from flask import abort
+
+        abort(404)
+    nueva = (request.form.get("categoria") or "").strip()
+    if nueva not in Desarrollo.CATEGORIAS:
+        flash("Categoría no válida.", "danger")
+    else:
+        d.categoria = nueva
+        db.session.commit()
+        invalidate_content_cache()
+        flash(f"«{d.nombre}» movido a {Desarrollo.CATEGORIAS[nueva]}.", "success")
+    return redirect(url_for("comercial.desarrollos"))
 
 
 @comercial_bp.route("/desarrollos/nuevo", methods=["GET", "POST"])
@@ -480,6 +542,8 @@ def _desarrollo_desde_form(d: Desarrollo, form, files, *, is_new: bool) -> list[
     d.resumen = form.get("resumen", "").strip() or None
     d.descripcion = form.get("descripcion", "").strip() or None
     d.estatus = form.get("estatus", "").strip() or None
+    cat = (form.get("categoria") or "").strip()
+    d.categoria = cat if cat in Desarrollo.CATEGORIAS else Desarrollo.CAT_DISPONIBLE
     d.precio_desde = precio
     d.enganche_min_pct = enganche
     d.plazos = plazos

@@ -3,7 +3,9 @@
 
 {% block content %}
 
-<!-- HERO -->
+{% for sec in diseno.home_secciones if sec.visible %}
+
+  {% if sec.id == 'hero' %}
 <section class="relative h-[92vh] min-h-[560px] -mt-20 overflow-hidden" data-hero-slider>
   {% for img in diseno.heroes %}
     <div class="hero-slide {{ 'is-active' if loop.first }}">
@@ -12,34 +14,24 @@
       <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-transparent"></div>
     </div>
   {% endfor %}
-
   <div class="relative z-10 h-full flex items-center">
     <div class="max-w-7xl mx-auto px-5 md:px-8 w-full">
       <div class="max-w-2xl" data-aos="fade-up">
-        <p class="uppercase tracking-[0.3em] text-gold text-sm mb-5">Negocios Inmobiliarios · Yucatán</p>
-        <h1 class="font-display text-5xl md:text-7xl leading-[1.05] mb-6 text-white">
-          Invierte en tierra con <span class="text-gold-gradient">certeza</span> y visión de futuro
-        </h1>
-        <p class="text-white/80 text-lg mb-10 max-w-xl">
-          Marnez Desarrollos crea comunidades residenciales y vacacionales en las mejores ubicaciones
-          de Yucatán, con acompañamiento legal y escrituración inmediata en cada etapa.
-        </p>
+        <p class="uppercase tracking-[0.3em] text-gold text-sm mb-5">{{ diseno.hero_eyebrow }}</p>
+        <h1 class="font-display text-5xl md:text-7xl leading-[1.05] mb-6 text-white">{{ diseno.hero_titulo }}</h1>
+        <p class="text-white/80 text-lg mb-10 max-w-xl">{{ diseno.hero_texto }}</p>
         <div class="flex flex-wrap gap-4">
-          <a href="{{ url_for('main.desarrollos') }}" class="btn-shimmer inline-flex items-center gap-2 rounded-full bg-gold px-7 py-3.5 text-ink font-semibold hover:bg-goldlight transition-colors">
-            Ver desarrollos
-          </a>
-          <a href="{{ url_for('main.contacto') }}" class="hero-outline-btn inline-flex items-center gap-2 rounded-full px-7 py-3.5 transition-colors">
-            Habla con un asesor
-          </a>
+          <a href="{{ url_for('main.desarrollos') }}" class="btn-shimmer inline-flex items-center gap-2 rounded-full bg-gold px-7 py-3.5 text-ink font-semibold hover:bg-goldlight transition-colors">Ver desarrollos</a>
+          <a href="{{ url_for('main.contacto') }}" class="hero-outline-btn inline-flex items-center gap-2 rounded-full px-7 py-3.5 transition-colors">Habla con un asesor</a>
         </div>
       </div>
     </div>
   </div>
-
   <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-10" data-hero-dots></div>
 </section>
+  {% endif %}
 
-<!-- CERTIFICACIONES -->
+  {% if sec.id == 'certificaciones' %}
 <section class="border-y border-white/10 bg-panel">
   <div class="max-w-7xl mx-auto px-5 md:px-8 py-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
     {% for c in certificaciones %}
@@ -56,19 +48,19 @@
     {% endfor %}
   </div>
 </section>
+  {% endif %}
 
-<!-- DESARROLLOS DESTACADOS -->
+  {% if sec.id == 'desarrollos' %}
 <section class="max-w-7xl mx-auto px-5 md:px-8 py-24">
   <div class="flex items-end justify-between mb-12 flex-wrap gap-4" data-aos="fade-up">
     <div>
-      <p class="uppercase tracking-[0.3em] text-gold text-sm mb-3">Nuestros desarrollos</p>
-      <h2 class="font-display text-4xl md:text-5xl">Terrenos residenciales y vacacionales</h2>
+      <p class="uppercase tracking-[0.3em] text-gold text-sm mb-3">{{ diseno.desarrollos_eyebrow }}</p>
+      <h2 class="font-display text-4xl md:text-5xl">{{ diseno.desarrollos_titulo }}</h2>
     </div>
-    <a href="{{ url_for('main.desarrollos') }}" class="text-gold hover:text-goldlight border-b border-gold/40 hover:border-gold pb-1">Ver todos los desarrollos &rarr;</a>
+    <a href="{{ url_for('main.desarrollos') }}#disponibles" class="text-gold hover:text-goldlight border-b border-gold/40 hover:border-gold pb-1">Ver todos &rarr;</a>
   </div>
-
   <div class="grid md:grid-cols-3 gap-8">
-    {% for d in destacados %}
+    {% for d in disponibles %}
       <a href="{{ url_for('main.desarrollo_detalle', slug=d.slug) }}" class="card-lift group block rounded-2xl overflow-hidden bg-panel border border-white/10" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
         <div class="aspect-[4/5] overflow-hidden">
           <img src="{{ d.portada | desarrollo_img(d.slug) }}" alt="{{ d.nombre }}" class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700">
@@ -80,30 +72,59 @@
           <span class="inline-flex items-center gap-2 text-sm text-gold">Ver desarrollo &rarr;</span>
         </div>
       </a>
+    {% else %}
+      <p class="text-cream/50 col-span-3">No hay proyectos disponibles por ahora.</p>
     {% endfor %}
   </div>
 </section>
+  {% endif %}
 
-<!-- NOSOTROS BITE -->
+  {% if sec.id == 'entregados' %}
+<section class="max-w-7xl mx-auto px-5 md:px-8 py-24">
+  <div class="flex items-end justify-between mb-12 flex-wrap gap-4" data-aos="fade-up">
+    <div>
+      <p class="uppercase tracking-[0.3em] text-gold text-sm mb-3">{{ diseno.entregados_eyebrow }}</p>
+      <h2 class="font-display text-4xl md:text-5xl">{{ diseno.entregados_titulo }}</h2>
+    </div>
+    <a href="{{ url_for('main.desarrollos') }}#entregados" class="text-gold hover:text-goldlight border-b border-gold/40 hover:border-gold pb-1">Ver todos &rarr;</a>
+  </div>
+  <div class="grid md:grid-cols-3 gap-8">
+    {% for d in entregados %}
+      <a href="{{ url_for('main.desarrollo_detalle', slug=d.slug) }}" class="card-lift group block rounded-2xl overflow-hidden bg-panel border border-white/10" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+        <div class="aspect-[4/5] overflow-hidden">
+          <img src="{{ d.portada | desarrollo_img(d.slug) }}" alt="{{ d.nombre }}" class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700">
+        </div>
+        <div class="p-6">
+          <p class="text-gold text-xs uppercase tracking-widest mb-2">{{ d.estatus or 'Entregado' }}</p>
+          <h3 class="font-display text-2xl mb-2">{{ d.nombre }}</h3>
+          <p class="text-cream/70 text-sm mb-4">{{ d.resumen }}</p>
+          <span class="inline-flex items-center gap-2 text-sm text-gold">Ver desarrollo &rarr;</span>
+        </div>
+      </a>
+    {% else %}
+      <p class="text-cream/50 col-span-3">Aún no hay proyectos entregados listados.</p>
+    {% endfor %}
+  </div>
+</section>
+  {% endif %}
+
+  {% if sec.id == 'nosotros' %}
 <section class="bg-panel border-y border-white/10">
   <div class="max-w-7xl mx-auto px-5 md:px-8 py-24 grid md:grid-cols-2 gap-14 items-center">
     <div data-aos="fade-right">
-      <img src="{{ url_for('static', filename='img/desarrollos/antal/antal-06.jpg') }}" alt="Marnez Desarrollos" class="rounded-2xl w-full h-[420px] object-cover">
+      <img src="{{ diseno.nosotros_imagen }}" alt="Marnez Desarrollos" class="rounded-2xl w-full h-[420px] object-cover">
     </div>
     <div data-aos="fade-left">
-      <p class="uppercase tracking-[0.3em] text-gold text-sm mb-4">Marnez Desarrollos</p>
-      <h2 class="font-display text-4xl mb-6">Negocios inmobiliarios con visión de largo plazo</h2>
-      <p class="text-cream/75 leading-relaxed mb-6">
-        Somos una empresa yucateca enfocada en la creación, desarrollo y comercialización de negocios
-        inmobiliarios. Generamos productos de gran valor para socios e inversionistas y ofrecemos una
-        visión de futuro que asegura el patrimonio y crecimiento de nuestros clientes.
-      </p>
+      <p class="uppercase tracking-[0.3em] text-gold text-sm mb-4">{{ diseno.nosotros_eyebrow }}</p>
+      <h2 class="font-display text-4xl mb-6">{{ diseno.nosotros_titulo }}</h2>
+      <p class="text-cream/75 leading-relaxed mb-6">{{ diseno.nosotros_texto }}</p>
       <a href="{{ url_for('main.nosotros') }}" class="inline-flex items-center gap-2 text-gold border-b border-gold/40 hover:border-gold pb-1">Conoce más &rarr;</a>
     </div>
   </div>
 </section>
+  {% endif %}
 
-<!-- TESTIMONIOS -->
+  {% if sec.id == 'testimonios' %}
 <section class="max-w-7xl mx-auto px-5 md:px-8 py-24">
   <p class="uppercase tracking-[0.3em] text-gold text-sm mb-3 text-center" data-aos="fade-up">Testimoniales</p>
   <h2 class="font-display text-4xl text-center mb-14" data-aos="fade-up">La confianza de quienes ya invirtieron</h2>
@@ -124,8 +145,9 @@
     {% endfor %}
   </div>
 </section>
+  {% endif %}
 
-<!-- BLOG PREVIEW -->
+  {% if sec.id == 'blog' %}
 <section class="bg-panel border-y border-white/10">
   <div class="max-w-7xl mx-auto px-5 md:px-8 py-24">
     <div class="flex items-end justify-between mb-12 flex-wrap gap-4" data-aos="fade-up">
@@ -150,8 +172,9 @@
     </div>
   </div>
 </section>
+  {% endif %}
 
-<!-- CTA UNETE A NOSOTROS -->
+  {% if sec.id == 'unete' %}
 <section class="max-w-7xl mx-auto px-5 md:px-8 py-24">
   <div class="rounded-3xl border border-gold/30 bg-gradient-to-br from-panel to-ink overflow-hidden grid {% if diseno.unete_imagen %}lg:grid-cols-2{% endif %}" data-aos="fade-up">
     {% if diseno.unete_imagen %}
@@ -173,5 +196,8 @@
     </div>
   </div>
 </section>
+  {% endif %}
+
+{% endfor %}
 
 {% endblock %}

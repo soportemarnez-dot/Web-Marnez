@@ -36,6 +36,23 @@ _ALTERS = {
         ("enlace_extra_nombre", "VARCHAR(80)"),
         ("enlace_extra_url", "VARCHAR(500)"),
     ],
+    "desarrollos": [
+        ("categoria", "VARCHAR(40) DEFAULT 'disponible'"),
+    ],
+    "ajustes_diseno": [
+        ("nosotros_imagen", "VARCHAR(255)"),
+        ("hero_eyebrow", "VARCHAR(120)"),
+        ("hero_titulo", "VARCHAR(220)"),
+        ("hero_texto", "TEXT"),
+        ("desarrollos_eyebrow", "VARCHAR(80)"),
+        ("desarrollos_titulo", "VARCHAR(160)"),
+        ("entregados_eyebrow", "VARCHAR(80)"),
+        ("entregados_titulo", "VARCHAR(160)"),
+        ("nosotros_eyebrow", "VARCHAR(80)"),
+        ("nosotros_titulo", "VARCHAR(160)"),
+        ("nosotros_texto", "TEXT"),
+        ("home_secciones_json", "TEXT"),
+    ],
 }
 
 
@@ -61,6 +78,22 @@ def ensure_schema(app) -> None:
                     text(
                         "UPDATE postulaciones SET estado = 'nuevo' "
                         "WHERE estado IS NULL OR LOWER(estado) IN ('nuevo', 'new')"
+                    )
+                )
+        # Backfill categoria de desarrollos según estatus
+        if "desarrollos" in existing:
+            present = {c["name"] for c in inspector.get_columns("desarrollos")}
+            if "categoria" in present:
+                db.session.execute(
+                    text(
+                        "UPDATE desarrollos SET categoria = 'disponible' "
+                        "WHERE categoria IS NULL OR categoria = ''"
+                    )
+                )
+                db.session.execute(
+                    text(
+                        "UPDATE desarrollos SET categoria = 'entregado' "
+                        "WHERE LOWER(COALESCE(estatus,'')) LIKE '%entregado%'"
                     )
                 )
         db.session.commit()
@@ -224,6 +257,11 @@ def seed_content_if_empty(app) -> None:
                 mapa_img=d.get("mapa_img"),
                 orden=idx,
                 activo=True,
+                categoria=(
+                    "entregado"
+                    if "entregado" in (d.get("estatus") or "").lower()
+                    else "disponible"
+                ),
             )
             row.amenidades = d.get("amenidades") or []
             row.plazos_meses = d.get("plazos_meses") or [12, 24, 36]

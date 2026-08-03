@@ -122,13 +122,22 @@
 
     <div class="grid sm:grid-cols-2 gap-5">
       <div>
-        <label class="block text-sm text-cream/70 mb-2">Estatus</label>
+        <label class="block text-sm text-cream/70 mb-2">Estatus (texto visible)</label>
         <input type="text" name="estatus" value="{{ form.get('estatus', d.estatus if d and d.estatus else '') }}" placeholder="Disponible · Preventa" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
       </div>
       <div>
-        <label class="block text-sm text-cream/70 mb-2">Orden</label>
-        <input type="number" name="orden" value="{{ form.get('orden', d.orden if d else 0) }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+        <label class="block text-sm text-cream/70 mb-2">Categoría del portafolio</label>
+        {% set cat_val = form.get('categoria', d.categoria if d and d.categoria else 'disponible') %}
+        <select name="categoria" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+          <option value="disponible" {{ 'selected' if cat_val == 'disponible' }}>Proyectos disponibles</option>
+          <option value="entregado" {{ 'selected' if cat_val == 'entregado' }}>Proyectos entregados</option>
+        </select>
       </div>
+    </div>
+
+    <div>
+      <label class="block text-sm text-cream/70 mb-2">Orden</label>
+      <input type="number" name="orden" value="{{ form.get('orden', d.orden if d else 0) }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
     </div>
 
     <div class="grid sm:grid-cols-2 gap-5">

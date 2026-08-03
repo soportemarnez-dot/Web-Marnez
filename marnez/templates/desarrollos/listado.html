@@ -5,31 +5,63 @@
 <section class="max-w-7xl mx-auto px-5 md:px-8 pt-16 pb-8">
   <p class="uppercase tracking-[0.3em] text-gold text-sm mb-3" data-aos="fade-up">Portafolio</p>
   <h1 class="font-display text-5xl mb-4" data-aos="fade-up">Nuestros desarrollos</h1>
-  <p class="text-cream/70 max-w-2xl" data-aos="fade-up">
+  <p class="text-cream/70 max-w-2xl mb-8" data-aos="fade-up">
     Lotes residenciales y espacios vacacionales en las mejores ubicaciones de Yucatán, en preventa
     y con entrega inmediata.
   </p>
+  <div class="flex flex-wrap gap-3" data-aos="fade-up">
+    <a href="#disponibles" class="rounded-full border border-gold/40 px-5 py-2 text-sm text-gold hover:bg-gold hover:text-ink transition-colors">Proyectos disponibles</a>
+    <a href="#entregados" class="rounded-full border border-white/20 px-5 py-2 text-sm text-cream/70 hover:border-gold hover:text-gold transition-colors">Proyectos entregados</a>
+  </div>
 </section>
 
-<section class="max-w-7xl mx-auto px-5 md:px-8 pb-24 grid md:grid-cols-2 gap-8">
-  {% for d in desarrollos %}
-    <a href="{{ url_for('main.desarrollo_detalle', slug=d.slug) }}" class="card-lift group block rounded-2xl overflow-hidden bg-panel border border-white/10" data-aos="fade-up" data-aos-delay="{{ (loop.index0 % 4) * 80 }}">
-      <div class="aspect-[16/10] overflow-hidden relative">
-        <img src="{{ d.portada | desarrollo_img(d.slug) }}" alt="{{ d.nombre }}" class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700">
-        <span class="absolute top-4 left-4 rounded-full bg-ink/80 border border-gold/40 px-4 py-1.5 text-xs uppercase tracking-widest text-gold">{{ d.estatus }}</span>
-      </div>
-      <div class="p-7">
-        <p class="text-cream/50 text-sm mb-1">{{ d.ubicacion }}</p>
-        <h2 class="font-display text-3xl mb-2">{{ d.nombre }}</h2>
-        <p class="text-gold text-sm mb-3">{{ d.tagline }}</p>
-        <p class="text-cream/70 text-sm mb-5">{{ d.resumen }}</p>
-        <div class="flex items-center justify-between">
-          <p class="text-sm text-cream/60">Desde <span class="text-cream font-semibold">${{ '{:,.0f}'.format(d.precio_desde) }} MXN</span></p>
+<section id="disponibles" class="max-w-7xl mx-auto px-5 md:px-8 pb-16 scroll-mt-28">
+  <h2 class="font-display text-3xl mb-8" data-aos="fade-up">Proyectos disponibles</h2>
+  <div class="grid md:grid-cols-2 gap-8">
+    {% for d in disponibles %}
+      <a href="{{ url_for('main.desarrollo_detalle', slug=d.slug) }}" class="card-lift group block rounded-2xl overflow-hidden bg-panel border border-white/10" data-aos="fade-up" data-aos-delay="{{ (loop.index0 % 4) * 80 }}">
+        <div class="aspect-[16/10] overflow-hidden relative">
+          <img src="{{ d.portada | desarrollo_img(d.slug) }}" alt="{{ d.nombre }}" class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700">
+          <span class="absolute top-4 left-4 rounded-full bg-ink/80 border border-gold/40 px-4 py-1.5 text-xs uppercase tracking-widest text-gold">{{ d.estatus }}</span>
+        </div>
+        <div class="p-7">
+          <p class="text-cream/50 text-sm mb-1">{{ d.ubicacion }}</p>
+          <h3 class="font-display text-3xl mb-2">{{ d.nombre }}</h3>
+          <p class="text-gold text-sm mb-3">{{ d.tagline }}</p>
+          <p class="text-cream/70 text-sm mb-5">{{ d.resumen }}</p>
+          <div class="flex items-center justify-between">
+            <p class="text-sm text-cream/60">Desde <span class="text-cream font-semibold">${{ '{:,.0f}'.format(d.precio_desde) }} MXN</span></p>
+            <span class="inline-flex items-center gap-2 text-sm text-gold">Ver desarrollo &rarr;</span>
+          </div>
+        </div>
+      </a>
+    {% else %}
+      <p class="text-cream/50 col-span-2">No hay proyectos disponibles publicados.</p>
+    {% endfor %}
+  </div>
+</section>
+
+<section id="entregados" class="max-w-7xl mx-auto px-5 md:px-8 pb-24 scroll-mt-28">
+  <h2 class="font-display text-3xl mb-8" data-aos="fade-up">Proyectos entregados</h2>
+  <div class="grid md:grid-cols-2 gap-8">
+    {% for d in entregados %}
+      <a href="{{ url_for('main.desarrollo_detalle', slug=d.slug) }}" class="card-lift group block rounded-2xl overflow-hidden bg-panel border border-white/10" data-aos="fade-up" data-aos-delay="{{ (loop.index0 % 4) * 80 }}">
+        <div class="aspect-[16/10] overflow-hidden relative">
+          <img src="{{ d.portada | desarrollo_img(d.slug) }}" alt="{{ d.nombre }}" class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700">
+          <span class="absolute top-4 left-4 rounded-full bg-ink/80 border border-emerald-500/40 px-4 py-1.5 text-xs uppercase tracking-widest text-emerald-200">{{ d.estatus or 'Entregado' }}</span>
+        </div>
+        <div class="p-7">
+          <p class="text-cream/50 text-sm mb-1">{{ d.ubicacion }}</p>
+          <h3 class="font-display text-3xl mb-2">{{ d.nombre }}</h3>
+          <p class="text-gold text-sm mb-3">{{ d.tagline }}</p>
+          <p class="text-cream/70 text-sm mb-5">{{ d.resumen }}</p>
           <span class="inline-flex items-center gap-2 text-sm text-gold">Ver desarrollo &rarr;</span>
         </div>
-      </div>
-    </a>
-  {% endfor %}
+      </a>
+    {% else %}
+      <p class="text-cream/50 col-span-2">No hay proyectos entregados listados.</p>
+    {% endfor %}
+  </div>
 </section>
 
 <section class="border-t border-white/10 bg-panel">

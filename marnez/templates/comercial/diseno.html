@@ -6,8 +6,8 @@
   <a href="{{ url_for('comercial.panel') }}" class="text-gold text-sm hover:text-goldlight">&larr; Volver al panel</a>
   <h1 class="font-display text-4xl mt-6 mb-2">Diseño del sitio</h1>
   <p class="text-cream/55 text-sm mb-10 max-w-2xl">
-    Cambia colores, logos, fotos del inicio y la sección «Únete a Nosotros» sin tocar código.
-    Los cambios se ven al instante en la página pública.
+    Cambia colores, logos, fotos, textos y el orden o visibilidad de las secciones del inicio
+    sin tocar código. Los cambios se ven al instante en la página pública.
   </p>
 
   <form method="post" enctype="multipart/form-data" class="space-y-10">
@@ -94,26 +94,110 @@
     </div>
 
     <div class="rounded-2xl border border-white/10 bg-panel p-6 md:p-8 space-y-6">
+      <h2 class="font-display text-2xl">Secciones del inicio</h2>
+      <p class="text-cream/50 text-sm">Activa, oculta o cambia el orden (número más bajo = aparece primero).</p>
+      <div class="space-y-3">
+        {% for s in d.home_secciones %}
+          <div class="flex flex-wrap items-center gap-4 rounded-xl border border-white/10 px-4 py-3">
+            <label class="flex items-center gap-2 text-sm min-w-[12rem]">
+              <input type="checkbox" name="sec_visible_{{ s.id }}" {{ 'checked' if s.visible }}>
+              {{ s.label }}
+            </label>
+            <label class="text-sm text-cream/60 flex items-center gap-2">
+              Orden
+              <input type="number" name="sec_orden_{{ s.id }}" value="{{ s.orden }}" class="w-20 rounded-lg bg-ink border border-white/15 px-3 py-1.5">
+            </label>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-white/10 bg-panel p-6 md:p-8 space-y-5">
+      <h2 class="font-display text-2xl">Textos del hero</h2>
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Etiqueta</label>
+        <input type="text" name="hero_eyebrow" value="{{ d.hero_eyebrow or ctx.hero_eyebrow }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+      </div>
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Título</label>
+        <input type="text" name="hero_titulo" value="{{ d.hero_titulo or ctx.hero_titulo }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+      </div>
+      <div>
+        <label class="block text-sm text-cream/70 mb-2">Texto</label>
+        <textarea name="hero_texto" rows="3" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">{{ d.hero_texto or ctx.hero_texto }}</textarea>
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-white/10 bg-panel p-6 md:p-8 space-y-5">
+      <h2 class="font-display text-2xl">Títulos de proyectos en el inicio</h2>
+      <div class="grid md:grid-cols-2 gap-5">
+        <div>
+          <label class="block text-sm text-cream/70 mb-2">Disponibles · etiqueta</label>
+          <input type="text" name="desarrollos_eyebrow" value="{{ d.desarrollos_eyebrow or ctx.desarrollos_eyebrow }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-sm text-cream/70 mb-2">Disponibles · título</label>
+          <input type="text" name="desarrollos_titulo" value="{{ d.desarrollos_titulo or ctx.desarrollos_titulo }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-sm text-cream/70 mb-2">Entregados · etiqueta</label>
+          <input type="text" name="entregados_eyebrow" value="{{ d.entregados_eyebrow or ctx.entregados_eyebrow }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-sm text-cream/70 mb-2">Entregados · título</label>
+          <input type="text" name="entregados_titulo" value="{{ d.entregados_titulo or ctx.entregados_titulo }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+        </div>
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-white/10 bg-panel p-6 md:p-8 space-y-5">
+      <h2 class="font-display text-2xl">Bloque Nosotros (inicio)</h2>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm text-cream/70 mb-2">Etiqueta</label>
+            <input type="text" name="nosotros_eyebrow" value="{{ d.nosotros_eyebrow or ctx.nosotros_eyebrow }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-sm text-cream/70 mb-2">Título</label>
+            <input type="text" name="nosotros_titulo" value="{{ d.nosotros_titulo or ctx.nosotros_titulo }}" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-sm text-cream/70 mb-2">Texto</label>
+            <textarea name="nosotros_texto" rows="5" class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">{{ d.nosotros_texto or ctx.nosotros_texto }}</textarea>
+          </div>
+        </div>
+        <div>
+          <p class="text-sm text-cream/70 mb-2">Imagen</p>
+          <img src="{{ ctx.nosotros_imagen }}" alt="" class="h-48 w-full object-cover rounded-lg border border-white/10 mb-3">
+          <input type="file" name="nosotros_imagen" accept="image/*" class="block w-full text-xs text-cream/60">
+          {% if d.nosotros_imagen %}
+            <label class="mt-2 flex items-center gap-2 text-xs text-cream/50">
+              <input type="checkbox" name="quitar_nosotros_imagen" value="1"> Volver al default
+            </label>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-white/10 bg-panel p-6 md:p-8 space-y-6">
       <h2 class="font-display text-2xl">Sección Únete a Nosotros</h2>
       <div class="grid md:grid-cols-2 gap-6">
         <div class="space-y-4">
           <div>
             <label class="block text-sm text-cream/70 mb-2">Etiqueta superior</label>
-            <input type="text" name="unete_eyebrow" value="{{ d.unete_eyebrow or '' }}"
-                   placeholder="Bolsa de trabajo"
+            <input type="text" name="unete_eyebrow" value="{{ d.unete_eyebrow or ctx.unete_eyebrow }}"
                    class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
           </div>
           <div>
             <label class="block text-sm text-cream/70 mb-2">Título</label>
-            <input type="text" name="unete_titulo" value="{{ d.unete_titulo or '' }}"
-                   placeholder="Únete a Nosotros"
+            <input type="text" name="unete_titulo" value="{{ d.unete_titulo or ctx.unete_titulo }}"
                    class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
           </div>
           <div>
             <label class="block text-sm text-cream/70 mb-2">Texto</label>
             <textarea name="unete_texto" rows="5"
-                      class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none"
-                      placeholder="Buscamos talento…">{{ d.unete_texto or '' }}</textarea>
+                      class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">{{ d.unete_texto or ctx.unete_texto }}</textarea>
           </div>
         </div>
         <div>

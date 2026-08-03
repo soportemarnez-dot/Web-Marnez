@@ -16,6 +16,8 @@ from ..models import Lead, AjustesComercial
 from ..data import TESTIMONIOS, CERTIFICACIONES, EQUIPO_FOTOS
 from ..content import (
     list_desarrollos_activos,
+    list_desarrollos_disponibles,
+    list_desarrollos_entregados,
     get_desarrollo,
     list_blog_posts,
     get_blog_post,
@@ -28,10 +30,10 @@ main_bp = Blueprint("main", __name__, template_folder="../templates")
 
 @main_bp.route("/")
 def index():
-    destacados = list_desarrollos_activos()[:3]
     return render_template(
         "index.html",
-        destacados=destacados,
+        disponibles=list_desarrollos_disponibles()[:3],
+        entregados=list_desarrollos_entregados()[:3],
         testimonios=TESTIMONIOS,
         certificaciones=CERTIFICACIONES,
         posts=list_blog_posts(limit=3),
@@ -41,7 +43,9 @@ def index():
 @main_bp.route("/desarrollos")
 def desarrollos():
     return render_template(
-        "desarrollos/listado.html", desarrollos=list_desarrollos_activos()
+        "desarrollos/listado.html",
+        disponibles=list_desarrollos_disponibles(),
+        entregados=list_desarrollos_entregados(),
     )
 
 
@@ -59,13 +63,12 @@ def desarrollo_detalle(slug):
         galeria.append(desarrollo_img_url(desarrollo.slug, img.filename))
 
     if not galeria:
-        # Compatibilidad seed: patrón slug-01.jpg en static
         count = desarrollo.galeria_count
         if not count:
-            # si no hay registros, intentar contar no es posible; vacío
             pass
 
-    otros = [d for d in list_desarrollos_activos() if d.slug != slug][:3]
+    mismos = list_desarrollos_activos(desarrollo.categoria)
+    otros = [d for d in mismos if d.slug != slug][:3]
     return render_template(
         "desarrollos/detalle.html", d=desarrollo, galeria=galeria, otros=otros
     )
@@ -98,7 +101,7 @@ def blog_post(slug):
 
 @main_bp.route("/contacto", methods=["GET", "POST"])
 def contacto():
-    desarrollos = list_desarrollos_activos()
+    desarrollos = list_desarrollos_disponibles()
     if request.method == "POST":
         nombre = request.form.get("nombre", "").strip()
         email = request.form.get("email", "").strip()

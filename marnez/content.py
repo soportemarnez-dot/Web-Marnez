@@ -10,13 +10,24 @@ def invalidate_content_cache() -> None:
     cache_invalidate("desarrollos:", "blogs:", "desarrollo:", "blog:")
 
 
-def list_desarrollos_activos():
-    return cached(
-        "desarrollos:activos",
-        lambda: Desarrollo.query.filter_by(activo=True)
-        .order_by(Desarrollo.orden.asc(), Desarrollo.nombre.asc())
-        .all(),
-    )
+def list_desarrollos_activos(categoria: str | None = None):
+    key = f"desarrollos:activos:{categoria or 'all'}"
+
+    def loader():
+        q = Desarrollo.query.filter_by(activo=True)
+        if categoria:
+            q = q.filter_by(categoria=categoria)
+        return q.order_by(Desarrollo.orden.asc(), Desarrollo.nombre.asc()).all()
+
+    return cached(key, loader)
+
+
+def list_desarrollos_disponibles():
+    return list_desarrollos_activos(Desarrollo.CAT_DISPONIBLE)
+
+
+def list_desarrollos_entregados():
+    return list_desarrollos_activos(Desarrollo.CAT_ENTREGADO)
 
 
 def get_desarrollo(slug: str):

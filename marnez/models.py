@@ -354,9 +354,20 @@ def _rgb_str_to_hex(rgb: str, fallback: str = "#c9a962") -> str:
 
 
 class AjustesDiseno(db.Model):
-    """Colores e imágenes de marca editables desde el panel comercial (Nivel A)."""
+    """Colores, imágenes y secciones del inicio editables (Nivel A + B)."""
 
     __tablename__ = "ajustes_diseno"
+
+    HOME_SECCIONES_DEFAULT = [
+        {"id": "hero", "label": "Hero principal", "visible": True, "orden": 0},
+        {"id": "certificaciones", "label": "Certificaciones", "visible": True, "orden": 1},
+        {"id": "desarrollos", "label": "Proyectos disponibles", "visible": True, "orden": 2},
+        {"id": "entregados", "label": "Proyectos entregados", "visible": True, "orden": 3},
+        {"id": "nosotros", "label": "Nosotros (resumen)", "visible": True, "orden": 4},
+        {"id": "testimonios", "label": "Testimonios", "visible": True, "orden": 5},
+        {"id": "blog", "label": "Blog", "visible": True, "orden": 6},
+        {"id": "unete", "label": "Únete a Nosotros", "visible": True, "orden": 7},
+    ]
 
     DEFAULTS = {
         "color_ink": "15 17 21",
@@ -375,9 +386,27 @@ class AjustesDiseno(db.Model):
             "Buscamos talento que comparta nuestra visión. Consulta las vacantes abiertas o, "
             "si no encuentras el puesto que buscas, comparte tu CV para que Capital Humano lo revise."
         ),
+        "hero_eyebrow": "Negocios Inmobiliarios · Yucatán",
+        "hero_titulo": "Invierte en tierra con certeza y visión de futuro",
+        "hero_texto": (
+            "Marnez Desarrollos crea comunidades residenciales y vacacionales en las mejores "
+            "ubicaciones de Yucatán, con acompañamiento legal y escrituración inmediata en cada etapa."
+        ),
+        "desarrollos_eyebrow": "Proyectos disponibles",
+        "desarrollos_titulo": "Terrenos residenciales y vacacionales",
+        "entregados_eyebrow": "Proyectos entregados",
+        "entregados_titulo": "Desarrollos que ya entregamos",
+        "nosotros_eyebrow": "Marnez Desarrollos",
+        "nosotros_titulo": "Negocios inmobiliarios con visión de largo plazo",
+        "nosotros_texto": (
+            "Somos una empresa yucateca enfocada en la creación, desarrollo y comercialización de "
+            "negocios inmobiliarios. Generamos productos de gran valor para socios e inversionistas "
+            "y ofrecemos una visión de futuro que asegura el patrimonio y crecimiento de nuestros clientes."
+        ),
         "static_logo_oscuro": "img/brand/logo-marnez-white.png",
         "static_logo_claro": "img/brand/logo-marnez.png",
         "static_splash": "img/hero/hero-night.jpg",
+        "static_nosotros": "img/desarrollos/antal/antal-06.jpg",
         "static_heroes": [
             "img/hero/hero-night.jpg",
             "img/hero/hero-concept-1.jpg",
@@ -408,14 +437,61 @@ class AjustesDiseno(db.Model):
     hero_3 = db.Column(db.String(255), nullable=True)
     hero_4 = db.Column(db.String(255), nullable=True)
     unete_imagen = db.Column(db.String(255), nullable=True)
+    nosotros_imagen = db.Column(db.String(255), nullable=True)
 
     unete_eyebrow = db.Column(db.String(80), nullable=True)
     unete_titulo = db.Column(db.String(120), nullable=True)
     unete_texto = db.Column(db.Text, nullable=True)
 
+    hero_eyebrow = db.Column(db.String(120), nullable=True)
+    hero_titulo = db.Column(db.String(220), nullable=True)
+    hero_texto = db.Column(db.Text, nullable=True)
+
+    desarrollos_eyebrow = db.Column(db.String(80), nullable=True)
+    desarrollos_titulo = db.Column(db.String(160), nullable=True)
+    entregados_eyebrow = db.Column(db.String(80), nullable=True)
+    entregados_titulo = db.Column(db.String(160), nullable=True)
+
+    nosotros_eyebrow = db.Column(db.String(80), nullable=True)
+    nosotros_titulo = db.Column(db.String(160), nullable=True)
+    nosotros_texto = db.Column(db.Text, nullable=True)
+
+    home_secciones_json = db.Column(db.Text, nullable=True)
+
     actualizado_en = db.Column(
         db.DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC)
     )
+
+    @property
+    def home_secciones(self) -> list[dict]:
+        try:
+            raw = json.loads(self.home_secciones_json or "[]")
+        except (TypeError, ValueError):
+            raw = []
+        by_id = {s.get("id"): s for s in raw if isinstance(s, dict) and s.get("id")}
+        merged = []
+        for default in self.HOME_SECCIONES_DEFAULT:
+            cur = dict(default)
+            if default["id"] in by_id:
+                ov = by_id[default["id"]]
+                cur["visible"] = bool(ov.get("visible", True))
+                try:
+                    cur["orden"] = int(ov.get("orden", default["orden"]))
+                except (TypeError, ValueError):
+                    cur["orden"] = default["orden"]
+            merged.append(cur)
+        merged.sort(key=lambda s: s["orden"])
+        return merged
+
+    @home_secciones.setter
+    def home_secciones(self, value: list[dict]) -> None:
+        self.home_secciones_json = json.dumps(value or [], ensure_ascii=False)
+
+    def seccion_visible(self, seccion_id: str) -> bool:
+        for s in self.home_secciones:
+            if s["id"] == seccion_id:
+                return bool(s.get("visible", True))
+        return True
 
     def color_hex(self, field: str) -> str:
         rgb = getattr(self, field, None) or self.DEFAULTS.get(field, "201 169 98")
@@ -453,6 +529,8 @@ class AjustesDiseno(db.Model):
         if is_media_ref(self.unete_imagen):
             unete_img = url_for("main.serve_media", filename=media_filename(self.unete_imagen))
 
+        nosotros_img = self.asset_url(self.nosotros_imagen, d["static_nosotros"])
+
         return {
             "ink": self.color_ink or d["color_ink"],
             "panel": self.color_panel or d["color_panel"],
@@ -472,6 +550,18 @@ class AjustesDiseno(db.Model):
             "unete_eyebrow": self.unete_eyebrow or d["unete_eyebrow"],
             "unete_titulo": self.unete_titulo or d["unete_titulo"],
             "unete_texto": self.unete_texto or d["unete_texto"],
+            "hero_eyebrow": self.hero_eyebrow or d["hero_eyebrow"],
+            "hero_titulo": self.hero_titulo or d["hero_titulo"],
+            "hero_texto": self.hero_texto or d["hero_texto"],
+            "desarrollos_eyebrow": self.desarrollos_eyebrow or d["desarrollos_eyebrow"],
+            "desarrollos_titulo": self.desarrollos_titulo or d["desarrollos_titulo"],
+            "entregados_eyebrow": self.entregados_eyebrow or d["entregados_eyebrow"],
+            "entregados_titulo": self.entregados_titulo or d["entregados_titulo"],
+            "nosotros_eyebrow": self.nosotros_eyebrow or d["nosotros_eyebrow"],
+            "nosotros_titulo": self.nosotros_titulo or d["nosotros_titulo"],
+            "nosotros_texto": self.nosotros_texto or d["nosotros_texto"],
+            "nosotros_imagen": nosotros_img,
+            "home_secciones": self.home_secciones,
         }
 
     @classmethod
@@ -519,6 +609,13 @@ class BlogPost(db.Model):
 class Desarrollo(db.Model):
     __tablename__ = "desarrollos"
 
+    CAT_DISPONIBLE = "disponible"
+    CAT_ENTREGADO = "entregado"
+    CATEGORIAS = {
+        CAT_DISPONIBLE: "Proyectos disponibles",
+        CAT_ENTREGADO: "Proyectos entregados",
+    }
+
     id = db.Column(db.Integer, primary_key=True)
     slug = db.Column(db.String(120), unique=True, nullable=False, index=True)
     nombre = db.Column(db.String(160), nullable=False)
@@ -541,6 +638,8 @@ class Desarrollo(db.Model):
     mapa_img = db.Column(db.String(255), nullable=True)
     orden = db.Column(db.Integer, nullable=False, default=0)
     activo = db.Column(db.Boolean, default=True, nullable=False, index=True)
+    # disponible = en venta / preventa · entregado = proyecto concluido
+    categoria = db.Column(db.String(40), nullable=False, default="disponible", index=True)
     creado_en = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
     actualizado_en = db.Column(
         db.DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC)
