@@ -10,6 +10,7 @@ from .extensions import db
 from .models import (
     AjustesHR,
     AjustesComercial,
+    AjustesDiseno,
     BlogPost,
     Desarrollo,
     DesarrolloImagen,
@@ -119,6 +120,7 @@ def seed_admins(app) -> None:
 
     AjustesHR.get_or_create()
     AjustesComercial.get_or_create(defaults=app.config.get("EMPRESA"))
+    AjustesDiseno.get_or_create()
     seed_plantillas_email(app)
 
 

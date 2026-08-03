@@ -17,6 +17,7 @@ from ..models import (
     Desarrollo,
     DesarrolloImagen,
     AjustesComercial,
+    AjustesDiseno,
     ROL_COMERCIAL,
 )
 from ..auth import require_rol, gestionar_cuenta
@@ -68,6 +69,66 @@ def panel():
         blogs_pub=BlogPost.query.filter_by(publicado=True).count(),
         des_activos=Desarrollo.query.filter_by(activo=True).count(),
     )
+
+
+@comercial_bp.route("/diseno", methods=["GET", "POST"])
+@require_rol(ROL_COMERCIAL)
+def diseno_ajustes():
+    """Colores de marca, logos, heroes y sección Únete (Nivel A low-code)."""
+    row = AjustesDiseno.get_or_create()
+    if request.method == "POST":
+        color_fields = [
+            "color_ink",
+            "color_panel",
+            "color_gold",
+            "color_goldlight",
+            "color_cream",
+            "color_ink_light",
+            "color_panel_light",
+            "color_gold_light",
+            "color_goldlight_light",
+            "color_cream_light",
+        ]
+        for field in color_fields:
+            hex_val = request.form.get(f"{field}_hex", "").strip()
+            if hex_val:
+                row.set_color_hex(field, hex_val)
+
+        row.unete_eyebrow = (request.form.get("unete_eyebrow") or "").strip() or None
+        row.unete_titulo = (request.form.get("unete_titulo") or "").strip() or None
+        row.unete_texto = (request.form.get("unete_texto") or "").strip() or None
+
+        img_fields = [
+            "logo_oscuro",
+            "logo_claro",
+            "splash_img",
+            "hero_1",
+            "hero_2",
+            "hero_3",
+            "hero_4",
+            "unete_imagen",
+        ]
+        for field in img_fields:
+            if request.form.get(f"quitar_{field}") == "1":
+                borrar_media_si_aplica(getattr(row, field))
+                setattr(row, field, None)
+                continue
+            f = request.files.get(field)
+            if f and f.filename:
+                if not allowed_image(f.filename):
+                    flash(f"Imagen inválida en {field} (usa JPG, PNG o WEBP).", "danger")
+                    continue
+                try:
+                    borrar_media_si_aplica(getattr(row, field))
+                    setattr(row, field, guardar_media(f))
+                except ValueError as exc:
+                    flash(str(exc), "danger")
+
+        db.session.commit()
+        flash("Diseño del sitio actualizado. Revisa la página pública.", "success")
+        return redirect(url_for("comercial.diseno_ajustes"))
+
+    return render_template("comercial/diseno.html", d=row, ctx=row.as_template_ctx())
 
 
 @comercial_bp.route("/cuenta", methods=["GET", "POST"])

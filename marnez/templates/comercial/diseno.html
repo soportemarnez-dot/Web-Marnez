@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Diseño del sitio · Comercial{% endblock %}
+
+{% block content %}
+<section class="max-w-5xl mx-auto px-5 md:px-8 py-16">
+  <a href="{{ url_for('comercial.panel') }}" class="text-gold text-sm hover:text-goldlight">&larr; Volver al panel</a>
+  <h1 class="font-display text-4xl mt-6 mb-2">Diseño del sitio</h1>
+  <p class="text-cream/55 text-sm mb-10 max-w-2xl">
+    Cambia colores, logos, fotos del inicio y la sección «Únete a Nosotros» sin tocar código.
+    Los cambios se ven al instante en la página pública.
+  </p>
+
+  <form method="post" enctype="multipart/form-data" class="space-y-10">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="rounded-2xl border border-white/10 bg-panel p-6 md:p-8 space-y-6">
+      <h2 class="font-display text-2xl">Colores · tema oscuro</h2>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {% for field, label in [
+          ('color_gold', 'Dorado'),
+          ('color_goldlight', 'Dorado claro'),
+          ('color_ink', 'Fondo'),
+          ('color_panel', 'Paneles / tarjetas'),
+          ('color_cream', 'Texto'),
+        ] %}
+          <label class="block text-sm">
+            <span class="text-cream/70 mb-2 block">{{ label }}</span>
+            <input type="color" name="{{ field }}_hex" value="{{ d.color_hex(field) }}"
+                   class="h-12 w-full rounded-lg bg-ink border border-white/15 cursor-pointer">
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-white/10 bg-panel p-6 md:p-8 space-y-6">
+      <h2 class="font-display text-2xl">Colores · tema claro</h2>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {% for field, label in [
+          ('color_gold_light', 'Dorado'),
+          ('color_goldlight_light', 'Dorado oscuro'),
+          ('color_ink_light', 'Fondo'),
+          ('color_panel_light', 'Paneles'),
+          ('color_cream_light', 'Texto'),
+        ] %}
+          <label class="block text-sm">
+            <span class="text-cream/70 mb-2 block">{{ label }}</span>
+            <input type="color" name="{{ field }}_hex" value="{{ d.color_hex(field) }}"
+                   class="h-12 w-full rounded-lg bg-ink border border-white/15 cursor-pointer">
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-white/10 bg-panel p-6 md:p-8 space-y-6">
+      <h2 class="font-display text-2xl">Logos y splash</h2>
+      <div class="grid md:grid-cols-3 gap-6">
+        {% for field, label, preview in [
+          ('logo_oscuro', 'Logo (fondo oscuro)', ctx.logo_oscuro),
+          ('logo_claro', 'Logo (fondo claro)', ctx.logo_claro),
+          ('splash_img', 'Imagen splash inicio', ctx.splash),
+        ] %}
+          <div>
+            <p class="text-sm text-cream/70 mb-2">{{ label }}</p>
+            <img src="{{ preview }}" alt="" class="h-20 w-full object-contain rounded-lg bg-ink border border-white/10 mb-3 p-2">
+            <input type="file" name="{{ field }}" accept="image/*" class="block w-full text-xs text-cream/60">
+            {% if d[field] %}
+              <label class="mt-2 flex items-center gap-2 text-xs text-cream/50">
+                <input type="checkbox" name="quitar_{{ field }}" value="1"> Volver al default
+              </label>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-white/10 bg-panel p-6 md:p-8 space-y-6">
+      <h2 class="font-display text-2xl">Hero del inicio (carrusel)</h2>
+      <div class="grid sm:grid-cols-2 gap-6">
+        {% for i in range(1, 5) %}
+          {% set field = 'hero_' ~ i %}
+          {% set preview = ctx.heroes[i - 1] %}
+          <div>
+            <p class="text-sm text-cream/70 mb-2">Slide {{ i }}</p>
+            <img src="{{ preview }}" alt="" class="h-36 w-full object-cover rounded-lg border border-white/10 mb-3">
+            <input type="file" name="{{ field }}" accept="image/*" class="block w-full text-xs text-cream/60">
+            {% if d[field] %}
+              <label class="mt-2 flex items-center gap-2 text-xs text-cream/50">
+                <input type="checkbox" name="quitar_{{ field }}" value="1"> Volver al default
+              </label>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-white/10 bg-panel p-6 md:p-8 space-y-6">
+      <h2 class="font-display text-2xl">Sección Únete a Nosotros</h2>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm text-cream/70 mb-2">Etiqueta superior</label>
+            <input type="text" name="unete_eyebrow" value="{{ d.unete_eyebrow or '' }}"
+                   placeholder="Bolsa de trabajo"
+                   class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-sm text-cream/70 mb-2">Título</label>
+            <input type="text" name="unete_titulo" value="{{ d.unete_titulo or '' }}"
+                   placeholder="Únete a Nosotros"
+                   class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-sm text-cream/70 mb-2">Texto</label>
+            <textarea name="unete_texto" rows="5"
+                      class="w-full rounded-lg bg-ink border border-white/15 px-4 py-3 focus:border-gold focus:outline-none"
+                      placeholder="Buscamos talento…">{{ d.unete_texto or '' }}</textarea>
+          </div>
+        </div>
+        <div>
+          <p class="text-sm text-cream/70 mb-2">Imagen de la sección</p>
+          {% if ctx.unete_imagen %}
+            <img src="{{ ctx.unete_imagen }}" alt="" class="h-48 w-full object-cover rounded-lg border border-white/10 mb-3">
+          {% else %}
+            <div class="h-48 rounded-lg border border-dashed border-white/15 flex items-center justify-center text-cream/40 text-sm mb-3">Sin imagen (solo texto)</div>
+          {% endif %}
+          <input type="file" name="unete_imagen" accept="image/*" class="block w-full text-xs text-cream/60">
+          {% if d.unete_imagen %}
+            <label class="mt-2 flex items-center gap-2 text-xs text-cream/50">
+              <input type="checkbox" name="quitar_unete_imagen" value="1"> Quitar imagen
+            </label>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-3">
+      <button type="submit" class="rounded-full bg-gold px-8 py-3.5 text-ink font-semibold hover:bg-goldlight transition-colors">Guardar diseño</button>
+      <a href="{{ url_for('main.index') }}" target="_blank" class="rounded-full border border-white/20 px-6 py-3.5 text-sm hover:border-gold hover:text-gold transition-colors">Ver sitio</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

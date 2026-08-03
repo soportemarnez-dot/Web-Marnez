@@ -5,10 +5,9 @@
 
 <!-- HERO -->
 <section class="relative h-[92vh] min-h-[560px] -mt-20 overflow-hidden" data-hero-slider>
-  {% set hero_imgs = ['hero/hero-night.jpg', 'hero/hero-concept-1.jpg', 'hero/hero-concept-2.jpg', 'desarrollos/costella/costella-01.jpg'] %}
-  {% for img in hero_imgs %}
+  {% for img in diseno.heroes %}
     <div class="hero-slide {{ 'is-active' if loop.first }}">
-      <img src="{{ url_for('static', filename='img/' ~ img) }}" alt="Desarrollo Marnez" class="h-full w-full object-cover">
+      <img src="{{ img }}" alt="Desarrollo Marnez" class="h-full w-full object-cover">
       <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/50"></div>
       <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-transparent"></div>
     </div>
@@ -154,18 +153,23 @@
 
 <!-- CTA UNETE A NOSOTROS -->
 <section class="max-w-7xl mx-auto px-5 md:px-8 py-24">
-  <div class="rounded-3xl border border-gold/30 bg-gradient-to-br from-panel to-ink p-10 md:p-16 grid md:grid-cols-2 gap-10 items-center" data-aos="fade-up">
-    <div>
-      <p class="uppercase tracking-[0.3em] text-gold text-sm mb-4">Bolsa de trabajo</p>
-      <h2 class="font-display text-4xl mb-5">Únete a Nosotros</h2>
-      <p class="text-cream/75 leading-relaxed">
-        Buscamos talento que comparta nuestra visión. Consulta las vacantes abiertas o, si no
-        encuentras el puesto que buscas, comparte tu CV para que Capital Humano lo revise.
-      </p>
-    </div>
-    <div class="flex flex-col sm:flex-row gap-4 md:justify-end">
-      <a href="{{ url_for('carreras.index') }}" class="inline-flex items-center justify-center rounded-full bg-gold px-7 py-3.5 text-ink font-semibold hover:bg-goldlight transition-colors">Ver vacantes</a>
-      <a href="{{ url_for('carreras.postular_espontanea') }}" class="inline-flex items-center justify-center rounded-full border border-white/30 px-7 py-3.5 hover:border-gold hover:text-gold transition-colors">Enviar mi CV</a>
+  <div class="rounded-3xl border border-gold/30 bg-gradient-to-br from-panel to-ink overflow-hidden grid {% if diseno.unete_imagen %}lg:grid-cols-2{% endif %}" data-aos="fade-up">
+    {% if diseno.unete_imagen %}
+      <div class="relative min-h-[240px] lg:min-h-full">
+        <img src="{{ diseno.unete_imagen }}" alt="{{ diseno.unete_titulo }}" class="absolute inset-0 h-full w-full object-cover">
+        <div class="absolute inset-0 bg-gradient-to-t from-ink/50 to-transparent lg:bg-gradient-to-r lg:from-transparent lg:to-ink/40"></div>
+      </div>
+    {% endif %}
+    <div class="p-10 md:p-14 flex flex-col justify-center gap-8">
+      <div>
+        <p class="uppercase tracking-[0.3em] text-gold text-sm mb-4">{{ diseno.unete_eyebrow }}</p>
+        <h2 class="font-display text-4xl mb-5">{{ diseno.unete_titulo }}</h2>
+        <p class="text-cream/75 leading-relaxed">{{ diseno.unete_texto }}</p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a href="{{ url_for('carreras.index') }}" class="inline-flex items-center justify-center rounded-full bg-gold px-7 py-3.5 text-ink font-semibold hover:bg-goldlight transition-colors">Ver vacantes</a>
+        <a href="{{ url_for('carreras.postular_espontanea') }}" class="inline-flex items-center justify-center rounded-full border border-white/30 px-7 py-3.5 hover:border-gold hover:text-gold transition-colors">Enviar mi CV</a>
+      </div>
     </div>
   </div>
 </section>

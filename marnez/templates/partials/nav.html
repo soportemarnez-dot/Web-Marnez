@@ -6,10 +6,10 @@
   class="fixed top-0 inset-x-0 z-50 border-b transition-[background,border-color] duration-500">
   <div class="max-w-7xl mx-auto px-5 md:px-8 h-20 flex items-center justify-between">
     <a href="{{ url_for('main.index') }}" class="flex items-center gap-3 shrink-0">
-      <img src="{{ url_for('static', filename='img/brand/logo-marnez-white.png') }}"
+      <img src="{{ diseno.logo_oscuro }}"
         x-show="{{ 'true' if on_hero_page else 'false' }} && !scrolled || !isLight" x-cloak
         alt="Marnez Desarrollos" class="h-9 w-auto">
-      <img src="{{ url_for('static', filename='img/brand/logo-marnez.png') }}"
+      <img src="{{ diseno.logo_claro }}"
         x-show="!({{ 'true' if on_hero_page else 'false' }} && !scrolled) && isLight" x-cloak
         alt="Marnez Desarrollos" class="h-9 w-auto">
     </a>

@@ -41,14 +41,30 @@
   }
 </script>
 <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=9">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=10">
+<style id="marnez-diseno">
+  :root {
+    --c-ink: {{ diseno.ink }};
+    --c-panel: {{ diseno.panel }};
+    --c-gold: {{ diseno.gold }};
+    --c-goldlight: {{ diseno.goldlight }};
+    --c-cream: {{ diseno.cream }};
+  }
+  html.light {
+    --c-ink: {{ diseno.ink_light }};
+    --c-panel: {{ diseno.panel_light }};
+    --c-gold: {{ diseno.gold_light_theme }};
+    --c-goldlight: {{ diseno.goldlight_light }};
+    --c-cream: {{ diseno.cream_light }};
+  }
+</style>
 {% block head %}{% endblock %}
 </head>
 <body class="bg-ink text-cream font-sans antialiased">
 
 {% if request.endpoint == 'main.index' %}
 <div id="splash" data-splash>
-  <img class="splash-bg" data-splash-bg src="{{ url_for('static', filename='img/hero/hero-night.jpg') }}" alt="">
+  <img class="splash-bg" data-splash-bg src="{{ diseno.splash }}" alt="">
   <div class="splash-overlay"></div>
   <div class="splash-word" data-splash-word>
     <span class="splash-word-glass">Marnez Desarrollos</span>

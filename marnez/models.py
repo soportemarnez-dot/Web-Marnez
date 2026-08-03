@@ -327,6 +327,164 @@ class AjustesComercial(db.Model):
         return row
 
 
+def _hex_to_rgb_str(hex_color: str, fallback: str) -> str:
+    raw = (hex_color or "").strip().lstrip("#")
+    if len(raw) == 3:
+        raw = "".join(ch * 2 for ch in raw)
+    if len(raw) != 6:
+        return fallback
+    try:
+        r = int(raw[0:2], 16)
+        g = int(raw[2:4], 16)
+        b = int(raw[4:6], 16)
+    except ValueError:
+        return fallback
+    return f"{r} {g} {b}"
+
+
+def _rgb_str_to_hex(rgb: str, fallback: str = "#c9a962") -> str:
+    parts = (rgb or "").strip().split()
+    if len(parts) != 3:
+        return fallback
+    try:
+        r, g, b = (max(0, min(255, int(p))) for p in parts)
+    except ValueError:
+        return fallback
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
+class AjustesDiseno(db.Model):
+    """Colores e imágenes de marca editables desde el panel comercial (Nivel A)."""
+
+    __tablename__ = "ajustes_diseno"
+
+    DEFAULTS = {
+        "color_ink": "15 17 21",
+        "color_panel": "23 26 33",
+        "color_gold": "201 169 98",
+        "color_goldlight": "228 207 156",
+        "color_cream": "244 239 230",
+        "color_ink_light": "250 249 246",
+        "color_panel_light": "255 255 255",
+        "color_gold_light": "165 128 47",
+        "color_goldlight_light": "122 95 35",
+        "color_cream_light": "26 24 20",
+        "unete_eyebrow": "Bolsa de trabajo",
+        "unete_titulo": "Únete a Nosotros",
+        "unete_texto": (
+            "Buscamos talento que comparta nuestra visión. Consulta las vacantes abiertas o, "
+            "si no encuentras el puesto que buscas, comparte tu CV para que Capital Humano lo revise."
+        ),
+        "static_logo_oscuro": "img/brand/logo-marnez-white.png",
+        "static_logo_claro": "img/brand/logo-marnez.png",
+        "static_splash": "img/hero/hero-night.jpg",
+        "static_heroes": [
+            "img/hero/hero-night.jpg",
+            "img/hero/hero-concept-1.jpg",
+            "img/hero/hero-concept-2.jpg",
+            "img/desarrollos/costella/costella-01.jpg",
+        ],
+    }
+
+    id = db.Column(db.Integer, primary_key=True)
+    color_ink = db.Column(db.String(20), nullable=False, default=DEFAULTS["color_ink"])
+    color_panel = db.Column(db.String(20), nullable=False, default=DEFAULTS["color_panel"])
+    color_gold = db.Column(db.String(20), nullable=False, default=DEFAULTS["color_gold"])
+    color_goldlight = db.Column(db.String(20), nullable=False, default=DEFAULTS["color_goldlight"])
+    color_cream = db.Column(db.String(20), nullable=False, default=DEFAULTS["color_cream"])
+    color_ink_light = db.Column(db.String(20), nullable=False, default=DEFAULTS["color_ink_light"])
+    color_panel_light = db.Column(db.String(20), nullable=False, default=DEFAULTS["color_panel_light"])
+    color_gold_light = db.Column(db.String(20), nullable=False, default=DEFAULTS["color_gold_light"])
+    color_goldlight_light = db.Column(
+        db.String(20), nullable=False, default=DEFAULTS["color_goldlight_light"]
+    )
+    color_cream_light = db.Column(db.String(20), nullable=False, default=DEFAULTS["color_cream_light"])
+
+    logo_oscuro = db.Column(db.String(255), nullable=True)
+    logo_claro = db.Column(db.String(255), nullable=True)
+    splash_img = db.Column(db.String(255), nullable=True)
+    hero_1 = db.Column(db.String(255), nullable=True)
+    hero_2 = db.Column(db.String(255), nullable=True)
+    hero_3 = db.Column(db.String(255), nullable=True)
+    hero_4 = db.Column(db.String(255), nullable=True)
+    unete_imagen = db.Column(db.String(255), nullable=True)
+
+    unete_eyebrow = db.Column(db.String(80), nullable=True)
+    unete_titulo = db.Column(db.String(120), nullable=True)
+    unete_texto = db.Column(db.Text, nullable=True)
+
+    actualizado_en = db.Column(
+        db.DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC)
+    )
+
+    def color_hex(self, field: str) -> str:
+        rgb = getattr(self, field, None) or self.DEFAULTS.get(field, "201 169 98")
+        return _rgb_str_to_hex(rgb)
+
+    def set_color_hex(self, field: str, hex_color: str) -> None:
+        fallback = self.DEFAULTS.get(field, "201 169 98")
+        setattr(self, field, _hex_to_rgb_str(hex_color, fallback))
+
+    def asset_url(self, ref: str | None, static_fallback: str) -> str:
+        from flask import url_for
+        from .media import is_media_ref, media_filename
+
+        if is_media_ref(ref):
+            return url_for("main.serve_media", filename=media_filename(ref))
+        return url_for("static", filename=static_fallback)
+
+    def as_template_ctx(self) -> dict:
+        from flask import url_for
+        from .media import is_media_ref, media_filename
+
+        d = self.DEFAULTS
+        heroes = []
+        for ref, fb in zip(
+            [self.hero_1, self.hero_2, self.hero_3, self.hero_4],
+            d["static_heroes"],
+            strict=True,
+        ):
+            if is_media_ref(ref):
+                heroes.append(url_for("main.serve_media", filename=media_filename(ref)))
+            else:
+                heroes.append(url_for("static", filename=fb))
+
+        unete_img = None
+        if is_media_ref(self.unete_imagen):
+            unete_img = url_for("main.serve_media", filename=media_filename(self.unete_imagen))
+
+        return {
+            "ink": self.color_ink or d["color_ink"],
+            "panel": self.color_panel or d["color_panel"],
+            "gold": self.color_gold or d["color_gold"],
+            "goldlight": self.color_goldlight or d["color_goldlight"],
+            "cream": self.color_cream or d["color_cream"],
+            "ink_light": self.color_ink_light or d["color_ink_light"],
+            "panel_light": self.color_panel_light or d["color_panel_light"],
+            "gold_light_theme": self.color_gold_light or d["color_gold_light"],
+            "goldlight_light": self.color_goldlight_light or d["color_goldlight_light"],
+            "cream_light": self.color_cream_light or d["color_cream_light"],
+            "logo_oscuro": self.asset_url(self.logo_oscuro, d["static_logo_oscuro"]),
+            "logo_claro": self.asset_url(self.logo_claro, d["static_logo_claro"]),
+            "splash": self.asset_url(self.splash_img, d["static_splash"]),
+            "heroes": heroes,
+            "unete_imagen": unete_img,
+            "unete_eyebrow": self.unete_eyebrow or d["unete_eyebrow"],
+            "unete_titulo": self.unete_titulo or d["unete_titulo"],
+            "unete_texto": self.unete_texto or d["unete_texto"],
+        }
+
+    @classmethod
+    def get_or_create(cls):
+        row = cls.query.first()
+        if row:
+            return row
+        row = cls()
+        db.session.add(row)
+        db.session.commit()
+        return row
+
+
 class Lead(db.Model):
     """Contacto general / interés en un desarrollo, desde el formulario de Contacto."""
 

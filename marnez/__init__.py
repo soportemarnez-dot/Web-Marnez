@@ -42,7 +42,7 @@ def create_app(config_class=Config):
 
     @app.context_processor
     def inject_globals():
-        from .models import AjustesComercial
+        from .models import AjustesComercial, AjustesDiseno
 
         defaults = app.config["EMPRESA"]
         try:
@@ -50,7 +50,33 @@ def create_app(config_class=Config):
             empresa = ajustes.as_empresa_dict(defaults)
         except Exception:
             empresa = defaults
-        return {"empresa": empresa, "now_year": datetime.now(UTC).year}
+        try:
+            diseno = AjustesDiseno.get_or_create().as_template_ctx()
+        except Exception:
+            from flask import url_for
+
+            d = AjustesDiseno.DEFAULTS
+            diseno = {
+                "ink": d["color_ink"],
+                "panel": d["color_panel"],
+                "gold": d["color_gold"],
+                "goldlight": d["color_goldlight"],
+                "cream": d["color_cream"],
+                "ink_light": d["color_ink_light"],
+                "panel_light": d["color_panel_light"],
+                "gold_light_theme": d["color_gold_light"],
+                "goldlight_light": d["color_goldlight_light"],
+                "cream_light": d["color_cream_light"],
+                "logo_oscuro": url_for("static", filename=d["static_logo_oscuro"]),
+                "logo_claro": url_for("static", filename=d["static_logo_claro"]),
+                "splash": url_for("static", filename=d["static_splash"]),
+                "heroes": [url_for("static", filename=h) for h in d["static_heroes"]],
+                "unete_imagen": None,
+                "unete_eyebrow": d["unete_eyebrow"],
+                "unete_titulo": d["unete_titulo"],
+                "unete_texto": d["unete_texto"],
+            }
+        return {"empresa": empresa, "diseno": diseno, "now_year": datetime.now(UTC).year}
 
     from .data import amenity_icon_key
     from .media import blog_img_url, desarrollo_img_url, video_url
