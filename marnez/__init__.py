@@ -87,6 +87,30 @@ def create_app(config_class=Config):
                 "nosotros_texto": d["nosotros_texto"],
                 "nosotros_imagen": url_for("static", filename=d["static_nosotros"]),
                 "home_secciones": list(AjustesDiseno.HOME_SECCIONES_DEFAULT),
+                "nosotros_page_hero": url_for("static", filename=d["static_nosotros_page_hero"]),
+                "nosotros_page_eyebrow": d["nosotros_page_eyebrow"],
+                "nosotros_page_titulo": d["nosotros_page_titulo"],
+                "nosotros_historia": d["nosotros_historia"],
+                "nosotros_mision": d["nosotros_mision"],
+                "nosotros_vision": d["nosotros_vision"],
+                "nosotros_cifras": list(AjustesDiseno.NOSOTROS_CIFRAS_DEFAULT),
+                "nosotros_compromisos_titulo": d["nosotros_compromisos_titulo"],
+                "nosotros_equipo_eyebrow": d["nosotros_equipo_eyebrow"],
+                "nosotros_equipo_titulo": d["nosotros_equipo_titulo"],
+                "nosotros_testimonios_titulo": d["nosotros_testimonios_titulo"],
+                "nosotros_cta_titulo": d["nosotros_cta_titulo"],
+                "nosotros_secciones": list(AjustesDiseno.NOSOTROS_SECCIONES_DEFAULT),
+                "equipo_fotos": [
+                    url_for("static", filename=f"img/equipo/{f}")
+                    for f in AjustesDiseno.EQUIPO_FOTOS_DEFAULT
+                ],
+                "equipo_fotos_refs": list(AjustesDiseno.EQUIPO_FOTOS_DEFAULT),
+                "unete_page_hero": url_for("static", filename=d["static_unete_page_hero"]),
+                "unete_page_subtitulo": d["unete_page_subtitulo"],
+                "unete_vacantes_titulo": d["unete_vacantes_titulo"],
+                "unete_cv_titulo": d["unete_cv_titulo"],
+                "unete_cv_texto": d["unete_cv_texto"],
+                "unete_page_secciones": list(AjustesDiseno.UNETE_PAGE_SECCIONES_DEFAULT),
             }
         return {"empresa": empresa, "diseno": diseno, "now_year": datetime.now(UTC).year}
 

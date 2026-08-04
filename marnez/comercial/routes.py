@@ -74,7 +74,7 @@ def panel():
 @comercial_bp.route("/diseno", methods=["GET", "POST"])
 @require_rol(ROL_COMERCIAL)
 def diseno_ajustes():
-    """Colores de marca, logos, heroes y sección Únete (Nivel A low-code)."""
+    """Colores, inicio, páginas Nosotros y Únete (low-code)."""
     row = AjustesDiseno.get_or_create()
     if request.method == "POST":
         color_fields = [
@@ -94,11 +94,10 @@ def diseno_ajustes():
             if hex_val:
                 row.set_color_hex(field, hex_val)
 
-        row.unete_eyebrow = (request.form.get("unete_eyebrow") or "").strip() or None
-        row.unete_titulo = (request.form.get("unete_titulo") or "").strip() or None
-        row.unete_texto = (request.form.get("unete_texto") or "").strip() or None
-
-        for field in (
+        text_fields = (
+            "unete_eyebrow",
+            "unete_titulo",
+            "unete_texto",
             "hero_eyebrow",
             "hero_titulo",
             "hero_texto",
@@ -109,20 +108,38 @@ def diseno_ajustes():
             "nosotros_eyebrow",
             "nosotros_titulo",
             "nosotros_texto",
-        ):
+            "nosotros_page_eyebrow",
+            "nosotros_page_titulo",
+            "nosotros_historia",
+            "nosotros_mision",
+            "nosotros_vision",
+            "nosotros_compromisos_titulo",
+            "nosotros_equipo_eyebrow",
+            "nosotros_equipo_titulo",
+            "nosotros_testimonios_titulo",
+            "nosotros_cta_titulo",
+            "unete_page_subtitulo",
+            "unete_vacantes_titulo",
+            "unete_cv_titulo",
+            "unete_cv_texto",
+        )
+        for field in text_fields:
+            if field not in request.form:
+                continue
             val = (request.form.get(field) or "").strip()
             setattr(row, field, val or None)
 
-        # Secciones del inicio: orden + visible (solo si el formulario las envía)
-        if any(k.startswith("sec_orden_") for k in request.form):
+        def _save_secciones(prefix: str, defaults: list[dict], setter):
+            if not any(k.startswith(f"{prefix}_orden_") for k in request.form):
+                return
             secciones = []
-            for default in AjustesDiseno.HOME_SECCIONES_DEFAULT:
+            for default in defaults:
                 sid = default["id"]
                 try:
-                    orden = int(request.form.get(f"sec_orden_{sid}", default["orden"]))
+                    orden = int(request.form.get(f"{prefix}_orden_{sid}", default["orden"]))
                 except (TypeError, ValueError):
                     orden = default["orden"]
-                visible = request.form.get(f"sec_visible_{sid}") == "on"
+                visible = request.form.get(f"{prefix}_visible_{sid}") == "on"
                 secciones.append(
                     {
                         "id": sid,
@@ -134,7 +151,50 @@ def diseno_ajustes():
             secciones.sort(key=lambda s: s["orden"])
             for i, s in enumerate(secciones):
                 s["orden"] = i
-            row.home_secciones = secciones
+            setter(secciones)
+
+        _save_secciones("sec", AjustesDiseno.HOME_SECCIONES_DEFAULT, lambda v: setattr(row, "home_secciones", v))
+        _save_secciones(
+            "nos",
+            AjustesDiseno.NOSOTROS_SECCIONES_DEFAULT,
+            lambda v: setattr(row, "nosotros_secciones", v),
+        )
+        _save_secciones(
+            "une",
+            AjustesDiseno.UNETE_PAGE_SECCIONES_DEFAULT,
+            lambda v: setattr(row, "unete_page_secciones", v),
+        )
+
+        # Cifras de la página Nosotros (4 slots)
+        if "cifra_valor_0" in request.form:
+            cifras = []
+            for i in range(4):
+                valor = (request.form.get(f"cifra_valor_{i}") or "").strip()
+                texto = (request.form.get(f"cifra_texto_{i}") or "").strip()
+                if valor or texto:
+                    cifras.append({"valor": valor, "texto": texto})
+            row.nosotros_cifras = cifras or list(AjustesDiseno.NOSOTROS_CIFRAS_DEFAULT)
+
+        # Fotos del equipo: quitar marcadas + subir nuevas
+        if "equipo_fotos_manage" in request.form:
+            keep = []
+            current = row.equipo_fotos_refs
+            for idx, ref in enumerate(current):
+                if request.form.get(f"quitar_equipo_{idx}") == "1":
+                    borrar_media_si_aplica(ref)
+                else:
+                    keep.append(ref)
+            for f in request.files.getlist("equipo_fotos_nuevas"):
+                if not f or not f.filename:
+                    continue
+                if not allowed_image(f.filename):
+                    flash(f"Imagen de equipo inválida: {f.filename}", "danger")
+                    continue
+                try:
+                    keep.append(guardar_media(f))
+                except ValueError as exc:
+                    flash(str(exc), "danger")
+            row.equipo_fotos_refs = keep
 
         img_fields = [
             "logo_oscuro",
@@ -146,6 +206,8 @@ def diseno_ajustes():
             "hero_4",
             "unete_imagen",
             "nosotros_imagen",
+            "nosotros_page_hero",
+            "unete_page_hero",
         ]
         for field in img_fields:
             if request.form.get(f"quitar_{field}") == "1":

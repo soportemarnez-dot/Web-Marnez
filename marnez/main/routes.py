@@ -13,7 +13,7 @@ from pathlib import Path
 
 from ..extensions import db
 from ..models import Lead, AjustesComercial
-from ..data import TESTIMONIOS, CERTIFICACIONES, EMPRESA_CIFRAS, EQUIPO_FOTOS
+from ..data import TESTIMONIOS, CERTIFICACIONES, EMPRESA_CIFRAS
 from ..content import (
     list_desarrollos_activos,
     list_desarrollos_disponibles,
@@ -80,7 +80,6 @@ def nosotros():
         "nosotros.html",
         certificaciones=CERTIFICACIONES,
         testimonios=TESTIMONIOS,
-        equipo_fotos=EQUIPO_FOTOS[:8],
     )
 
 

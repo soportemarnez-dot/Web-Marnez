@@ -3,55 +3,59 @@
 {% set compromiso_icons = ['handshake.png', 'calendar.png', 'referral.png', 'star.png'] %}
 
 {% block content %}
+{% for sec in diseno.nosotros_secciones if sec.visible %}
+
+  {% if sec.id == 'hero' %}
 <section class="relative h-[60vh] min-h-[380px] -mt-20 overflow-hidden">
-  <img src="{{ url_for('static', filename='img/desarrollos/paraiso/paraiso-01.jpg') }}" alt="Marnez Desarrollos" class="h-full w-full object-cover">
+  <img src="{{ diseno.nosotros_page_hero }}" alt="Marnez Desarrollos" class="h-full w-full object-cover">
   <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/40"></div>
   <div class="relative z-10 h-full flex items-end">
     <div class="max-w-7xl mx-auto px-5 md:px-8 pb-14">
-      <p class="uppercase tracking-[0.3em] text-gold text-sm mb-3" data-aos="fade-up">Marnez Desarrollos</p>
-      <h1 class="font-display text-5xl md:text-6xl text-white" data-aos="fade-up">Negocios Inmobiliarios</h1>
+      <p class="uppercase tracking-[0.3em] text-gold text-sm mb-3" data-aos="fade-up">{{ diseno.nosotros_page_eyebrow }}</p>
+      <h1 class="font-display text-5xl md:text-6xl text-white" data-aos="fade-up">{{ diseno.nosotros_page_titulo }}</h1>
     </div>
   </div>
 </section>
+  {% endif %}
 
+  {% if sec.id == 'historia' %}
 <section class="max-w-5xl mx-auto px-5 md:px-8 py-20">
   <p class="uppercase tracking-[0.3em] text-gold text-sm mb-4" data-aos="fade-up">Nuestra historia</p>
-  <p class="text-cream/80 text-xl leading-relaxed font-display" data-aos="fade-up">
-    En 2020 tomamos como inspiración el contacto con la tierra, nuestras raíces y el arte de las
-    ventas para formar Marnez Desarrollos. Visitar los municipios de Yucatán, conocer a la gente de
-    la región, entender su estilo de vida y querer compartirlo con muchas más personas, así como
-    profundizar en los procesos legales de adquisición de inmuebles, fueron elementos clave en la
-    construcción de un camino sólido en la comercialización de proyectos inmobiliarios.
-  </p>
+  <p class="text-cream/80 text-xl leading-relaxed font-display" data-aos="fade-up">{{ diseno.nosotros_historia }}</p>
 </section>
+  {% endif %}
 
+  {% if sec.id == 'mision_vision' %}
 <section class="bg-panel border-y border-white/10">
   <div class="max-w-7xl mx-auto px-5 md:px-8 py-20 grid sm:grid-cols-2 gap-8">
     <div class="rounded-2xl border border-white/10 bg-ink p-8" data-aos="fade-up">
       <span class="icon-badge icon-badge-lg mb-4"><img src="{{ url_for('static', filename='img/icons/target.png') }}" alt=""></span>
       <p class="text-gold text-xs uppercase tracking-widest mb-3">Misión</p>
-      <p class="font-display text-3xl">Ser mejores que ayer.</p>
+      <p class="font-display text-3xl">{{ diseno.nosotros_mision }}</p>
     </div>
     <div class="rounded-2xl border border-white/10 bg-ink p-8" data-aos="fade-up" data-aos-delay="80">
       <span class="icon-badge icon-badge-lg mb-4"><img src="{{ url_for('static', filename='img/icons/eye.png') }}" alt=""></span>
       <p class="text-gold text-xs uppercase tracking-widest mb-3">Visión</p>
-      <p class="font-display text-2xl leading-snug">
-        Innovación en el ramo inmobiliario mediante la contribución profesional y el crecimiento de
-        cada uno de nuestros colaboradores.
-      </p>
+      <p class="font-display text-2xl leading-snug">{{ diseno.nosotros_vision }}</p>
     </div>
   </div>
 </section>
+  {% endif %}
 
+  {% if sec.id == 'cifras' %}
 <section class="max-w-7xl mx-auto px-5 md:px-8 py-20 grid sm:grid-cols-2 md:grid-cols-4 gap-8 text-center">
-  <div data-aos="fade-up"><p class="font-display text-5xl text-gold mb-2">+333,500</p><p class="text-cream/70 text-sm">m² vendidos</p></div>
-  <div data-aos="fade-up" data-aos-delay="80"><p class="font-display text-5xl text-gold mb-2">+1,150</p><p class="text-cream/70 text-sm">Clientes</p></div>
-  <div data-aos="fade-up" data-aos-delay="160"><p class="font-display text-5xl text-gold mb-2">2020</p><p class="text-cream/70 text-sm">Año de fundación</p></div>
-  <div data-aos="fade-up" data-aos-delay="240"><p class="font-display text-5xl text-gold mb-2">Yuc.</p><p class="text-cream/70 text-sm">Sureste de México</p></div>
+  {% for c in diseno.nosotros_cifras %}
+    <div data-aos="fade-up" data-aos-delay="{{ loop.index0 * 80 }}">
+      <p class="font-display text-5xl text-gold mb-2">{{ c.valor }}</p>
+      <p class="text-cream/70 text-sm">{{ c.texto }}</p>
+    </div>
+  {% endfor %}
 </section>
+  {% endif %}
 
+  {% if sec.id == 'compromisos' %}
 <section class="max-w-7xl mx-auto px-5 md:px-8 py-20">
-  <h2 class="font-display text-3xl mb-10 text-center" data-aos="fade-up">Nuestros compromisos</h2>
+  <h2 class="font-display text-3xl mb-10 text-center" data-aos="fade-up">{{ diseno.nosotros_compromisos_titulo }}</h2>
   <div class="grid sm:grid-cols-2 gap-6">
     {% for c in certificaciones %}
       {% set texto = c.texto if c is mapping else c %}
@@ -69,24 +73,26 @@
     {% endfor %}
   </div>
 </section>
+  {% endif %}
 
-{% if equipo_fotos %}
+  {% if sec.id == 'equipo' and diseno.equipo_fotos %}
 <section class="max-w-7xl mx-auto px-5 md:px-8 py-20">
-  <p class="uppercase tracking-[0.3em] text-gold text-sm mb-3 text-center" data-aos="fade-up">Nuestro equipo</p>
-  <h2 class="font-display text-3xl text-center mb-14" data-aos="fade-up">El buen ambiente detrás de cada entrega</h2>
+  <p class="uppercase tracking-[0.3em] text-gold text-sm mb-3 text-center" data-aos="fade-up">{{ diseno.nosotros_equipo_eyebrow }}</p>
+  <h2 class="font-display text-3xl text-center mb-14" data-aos="fade-up">{{ diseno.nosotros_equipo_titulo }}</h2>
   <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-    {% for foto in equipo_fotos %}
-      <button type="button" data-lightbox-src="{{ url_for('static', filename='img/equipo/' ~ foto) }}" class="aspect-square overflow-hidden rounded-xl border border-white/10 group" data-aos="fade-up" data-aos-delay="{{ (loop.index0 % 4) * 60 }}">
-        <img src="{{ url_for('static', filename='img/equipo/' ~ foto) }}" alt="Equipo Marnez" loading="lazy" class="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500">
+    {% for foto in diseno.equipo_fotos %}
+      <button type="button" data-lightbox-src="{{ foto }}" class="aspect-square overflow-hidden rounded-xl border border-white/10 group" data-aos="fade-up" data-aos-delay="{{ (loop.index0 % 4) * 60 }}">
+        <img src="{{ foto }}" alt="Equipo Marnez" loading="lazy" class="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500">
       </button>
     {% endfor %}
   </div>
 </section>
-{% endif %}
+  {% endif %}
 
+  {% if sec.id == 'testimonios' %}
 <section class="bg-panel border-t border-white/10">
   <div class="max-w-7xl mx-auto px-5 md:px-8 py-20">
-    <h2 class="font-display text-3xl mb-14 text-center" data-aos="fade-up">Lo que dicen de nosotros</h2>
+    <h2 class="font-display text-3xl mb-14 text-center" data-aos="fade-up">{{ diseno.nosotros_testimonios_titulo }}</h2>
     <div class="grid md:grid-cols-3 gap-8">
       {% for t in testimonios %}
         <div class="testimonial-card" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
@@ -105,9 +111,14 @@
     </div>
   </div>
 </section>
+  {% endif %}
 
+  {% if sec.id == 'cta_unete' %}
 <section class="max-w-7xl mx-auto px-5 md:px-8 py-20 text-center" data-aos="fade-up">
-  <h2 class="font-display text-3xl mb-5">¿Quieres ser parte de nuestro equipo?</h2>
+  <h2 class="font-display text-3xl mb-5">{{ diseno.nosotros_cta_titulo }}</h2>
   <a href="{{ url_for('carreras.index') }}" class="inline-flex items-center gap-2 rounded-full bg-gold px-8 py-3.5 text-ink font-semibold hover:bg-goldlight transition-colors">Únete a Nosotros</a>
 </section>
+  {% endif %}
+
+{% endfor %}
 {% endblock %}

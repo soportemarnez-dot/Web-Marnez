@@ -369,6 +369,32 @@ class AjustesDiseno(db.Model):
         {"id": "unete", "label": "Únete a Nosotros", "visible": True, "orden": 7},
     ]
 
+    NOSOTROS_SECCIONES_DEFAULT = [
+        {"id": "hero", "label": "Hero", "visible": True, "orden": 0},
+        {"id": "historia", "label": "Historia", "visible": True, "orden": 1},
+        {"id": "mision_vision", "label": "Misión y visión", "visible": True, "orden": 2},
+        {"id": "cifras", "label": "Cifras", "visible": True, "orden": 3},
+        {"id": "compromisos", "label": "Compromisos", "visible": True, "orden": 4},
+        {"id": "equipo", "label": "Equipo (fotos)", "visible": True, "orden": 5},
+        {"id": "testimonios", "label": "Testimonios", "visible": True, "orden": 6},
+        {"id": "cta_unete", "label": "CTA Únete", "visible": True, "orden": 7},
+    ]
+
+    UNETE_PAGE_SECCIONES_DEFAULT = [
+        {"id": "hero", "label": "Hero", "visible": True, "orden": 0},
+        {"id": "vacantes", "label": "Vacantes abiertas", "visible": True, "orden": 1},
+        {"id": "cv", "label": "Enviar CV espontáneo", "visible": True, "orden": 2},
+    ]
+
+    NOSOTROS_CIFRAS_DEFAULT = [
+        {"valor": "+333,500", "texto": "m² vendidos"},
+        {"valor": "+1,150", "texto": "Clientes"},
+        {"valor": "2020", "texto": "Año de fundación"},
+        {"valor": "Yuc.", "texto": "Sureste de México"},
+    ]
+
+    EQUIPO_FOTOS_DEFAULT = [f"equipo-{i:02d}.jpg" for i in range(1, 9)]
+
     DEFAULTS = {
         "color_ink": "15 17 21",
         "color_panel": "23 26 33",
@@ -385,6 +411,13 @@ class AjustesDiseno(db.Model):
         "unete_texto": (
             "Buscamos talento que comparta nuestra visión. Consulta las vacantes abiertas o, "
             "si no encuentras el puesto que buscas, comparte tu CV para que Capital Humano lo revise."
+        ),
+        "unete_page_subtitulo": "Construyamos juntos el futuro inmobiliario de Yucatán.",
+        "unete_vacantes_titulo": "Vacantes abiertas",
+        "unete_cv_titulo": "¿No encuentras el puesto que buscas?",
+        "unete_cv_texto": (
+            "Comparte tu CV con nosotros. Capital Humano lo revisará y te tendrá en cuenta "
+            "para futuras oportunidades en Marnez Desarrollos."
         ),
         "hero_eyebrow": "Negocios Inmobiliarios · Yucatán",
         "hero_titulo": "Invierte en tierra con certeza y visión de futuro",
@@ -403,10 +436,31 @@ class AjustesDiseno(db.Model):
             "negocios inmobiliarios. Generamos productos de gran valor para socios e inversionistas "
             "y ofrecemos una visión de futuro que asegura el patrimonio y crecimiento de nuestros clientes."
         ),
+        "nosotros_page_eyebrow": "Marnez Desarrollos",
+        "nosotros_page_titulo": "Negocios Inmobiliarios",
+        "nosotros_historia": (
+            "En 2020 tomamos como inspiración el contacto con la tierra, nuestras raíces y el arte de las "
+            "ventas para formar Marnez Desarrollos. Visitar los municipios de Yucatán, conocer a la gente de "
+            "la región, entender su estilo de vida y querer compartirlo con muchas más personas, así como "
+            "profundizar en los procesos legales de adquisición de inmuebles, fueron elementos clave en la "
+            "construcción de un camino sólido en la comercialización de proyectos inmobiliarios."
+        ),
+        "nosotros_mision": "Ser mejores que ayer.",
+        "nosotros_vision": (
+            "Innovación en el ramo inmobiliario mediante la contribución profesional y el crecimiento de "
+            "cada uno de nuestros colaboradores."
+        ),
+        "nosotros_compromisos_titulo": "Nuestros compromisos",
+        "nosotros_equipo_eyebrow": "Nuestro equipo",
+        "nosotros_equipo_titulo": "El buen ambiente detrás de cada entrega",
+        "nosotros_testimonios_titulo": "Lo que dicen de nosotros",
+        "nosotros_cta_titulo": "¿Quieres ser parte de nuestro equipo?",
         "static_logo_oscuro": "img/brand/logo-marnez-white.png",
         "static_logo_claro": "img/brand/logo-marnez.png",
         "static_splash": "img/hero/hero-night.jpg",
         "static_nosotros": "img/desarrollos/antal/antal-06.jpg",
+        "static_nosotros_page_hero": "img/desarrollos/paraiso/paraiso-01.jpg",
+        "static_unete_page_hero": "img/hero/hero-careers.jpg",
         "static_heroes": [
             "img/hero/hero-night.jpg",
             "img/hero/hero-concept-1.jpg",
@@ -458,19 +512,43 @@ class AjustesDiseno(db.Model):
 
     home_secciones_json = db.Column(db.Text, nullable=True)
 
+    # Página /nosotros
+    nosotros_page_hero = db.Column(db.String(255), nullable=True)
+    nosotros_page_eyebrow = db.Column(db.String(80), nullable=True)
+    nosotros_page_titulo = db.Column(db.String(160), nullable=True)
+    nosotros_historia = db.Column(db.Text, nullable=True)
+    nosotros_mision = db.Column(db.Text, nullable=True)
+    nosotros_vision = db.Column(db.Text, nullable=True)
+    nosotros_cifras_json = db.Column(db.Text, nullable=True)
+    nosotros_compromisos_titulo = db.Column(db.String(160), nullable=True)
+    nosotros_equipo_eyebrow = db.Column(db.String(80), nullable=True)
+    nosotros_equipo_titulo = db.Column(db.String(160), nullable=True)
+    nosotros_testimonios_titulo = db.Column(db.String(160), nullable=True)
+    nosotros_cta_titulo = db.Column(db.String(160), nullable=True)
+    nosotros_secciones_json = db.Column(db.Text, nullable=True)
+    equipo_fotos_json = db.Column(db.Text, nullable=True)
+
+    # Página /unete-a-nosotros
+    unete_page_hero = db.Column(db.String(255), nullable=True)
+    unete_page_subtitulo = db.Column(db.String(220), nullable=True)
+    unete_vacantes_titulo = db.Column(db.String(160), nullable=True)
+    unete_cv_titulo = db.Column(db.String(160), nullable=True)
+    unete_cv_texto = db.Column(db.Text, nullable=True)
+    unete_page_secciones_json = db.Column(db.Text, nullable=True)
+
     actualizado_en = db.Column(
         db.DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC)
     )
 
-    @property
-    def home_secciones(self) -> list[dict]:
+    @staticmethod
+    def _merge_secciones(defaults: list[dict], raw_json: str | None) -> list[dict]:
         try:
-            raw = json.loads(self.home_secciones_json or "[]")
+            raw = json.loads(raw_json or "[]")
         except (TypeError, ValueError):
             raw = []
         by_id = {s.get("id"): s for s in raw if isinstance(s, dict) and s.get("id")}
         merged = []
-        for default in self.HOME_SECCIONES_DEFAULT:
+        for default in defaults:
             cur = dict(default)
             if default["id"] in by_id:
                 ov = by_id[default["id"]]
@@ -483,9 +561,65 @@ class AjustesDiseno(db.Model):
         merged.sort(key=lambda s: s["orden"])
         return merged
 
+    @property
+    def home_secciones(self) -> list[dict]:
+        return self._merge_secciones(self.HOME_SECCIONES_DEFAULT, self.home_secciones_json)
+
     @home_secciones.setter
     def home_secciones(self, value: list[dict]) -> None:
         self.home_secciones_json = json.dumps(value or [], ensure_ascii=False)
+
+    @property
+    def nosotros_secciones(self) -> list[dict]:
+        return self._merge_secciones(self.NOSOTROS_SECCIONES_DEFAULT, self.nosotros_secciones_json)
+
+    @nosotros_secciones.setter
+    def nosotros_secciones(self, value: list[dict]) -> None:
+        self.nosotros_secciones_json = json.dumps(value or [], ensure_ascii=False)
+
+    @property
+    def unete_page_secciones(self) -> list[dict]:
+        return self._merge_secciones(self.UNETE_PAGE_SECCIONES_DEFAULT, self.unete_page_secciones_json)
+
+    @unete_page_secciones.setter
+    def unete_page_secciones(self, value: list[dict]) -> None:
+        self.unete_page_secciones_json = json.dumps(value or [], ensure_ascii=False)
+
+    @property
+    def nosotros_cifras(self) -> list[dict]:
+        try:
+            raw = json.loads(self.nosotros_cifras_json or "[]")
+        except (TypeError, ValueError):
+            raw = []
+        if not isinstance(raw, list) or not raw:
+            return [dict(x) for x in self.NOSOTROS_CIFRAS_DEFAULT]
+        out = []
+        for item in raw:
+            if not isinstance(item, dict):
+                continue
+            valor = (item.get("valor") or "").strip()
+            texto = (item.get("texto") or "").strip()
+            if valor or texto:
+                out.append({"valor": valor, "texto": texto})
+        return out or [dict(x) for x in self.NOSOTROS_CIFRAS_DEFAULT]
+
+    @nosotros_cifras.setter
+    def nosotros_cifras(self, value: list[dict]) -> None:
+        self.nosotros_cifras_json = json.dumps(value or [], ensure_ascii=False)
+
+    @property
+    def equipo_fotos_refs(self) -> list[str]:
+        try:
+            raw = json.loads(self.equipo_fotos_json or "[]")
+        except (TypeError, ValueError):
+            raw = []
+        if isinstance(raw, list) and raw:
+            return [str(x) for x in raw if x]
+        return list(self.EQUIPO_FOTOS_DEFAULT)
+
+    @equipo_fotos_refs.setter
+    def equipo_fotos_refs(self, value: list[str]) -> None:
+        self.equipo_fotos_json = json.dumps(value or [], ensure_ascii=False)
 
     def seccion_visible(self, seccion_id: str) -> bool:
         for s in self.home_secciones:
@@ -509,6 +643,16 @@ class AjustesDiseno(db.Model):
             return url_for("main.serve_media", filename=media_filename(ref))
         return url_for("static", filename=static_fallback)
 
+    def equipo_foto_url(self, ref: str) -> str:
+        from flask import url_for
+        from .media import is_media_ref, media_filename
+
+        if is_media_ref(ref):
+            return url_for("main.serve_media", filename=media_filename(ref))
+        # Legacy static: equipo-01.jpg
+        name = ref if "/" not in ref else ref.rsplit("/", 1)[-1]
+        return url_for("static", filename=f"img/equipo/{name}")
+
     def as_template_ctx(self) -> dict:
         from flask import url_for
         from .media import is_media_ref, media_filename
@@ -530,6 +674,10 @@ class AjustesDiseno(db.Model):
             unete_img = url_for("main.serve_media", filename=media_filename(self.unete_imagen))
 
         nosotros_img = self.asset_url(self.nosotros_imagen, d["static_nosotros"])
+        equipo_urls = [self.equipo_foto_url(r) for r in self.equipo_fotos_refs]
+
+        def txt(field: str) -> str:
+            return getattr(self, field, None) or d.get(field, "")
 
         return {
             "ink": self.color_ink or d["color_ink"],
@@ -547,21 +695,46 @@ class AjustesDiseno(db.Model):
             "splash": self.asset_url(self.splash_img, d["static_splash"]),
             "heroes": heroes,
             "unete_imagen": unete_img,
-            "unete_eyebrow": self.unete_eyebrow or d["unete_eyebrow"],
-            "unete_titulo": self.unete_titulo or d["unete_titulo"],
-            "unete_texto": self.unete_texto or d["unete_texto"],
-            "hero_eyebrow": self.hero_eyebrow or d["hero_eyebrow"],
-            "hero_titulo": self.hero_titulo or d["hero_titulo"],
-            "hero_texto": self.hero_texto or d["hero_texto"],
-            "desarrollos_eyebrow": self.desarrollos_eyebrow or d["desarrollos_eyebrow"],
-            "desarrollos_titulo": self.desarrollos_titulo or d["desarrollos_titulo"],
-            "entregados_eyebrow": self.entregados_eyebrow or d["entregados_eyebrow"],
-            "entregados_titulo": self.entregados_titulo or d["entregados_titulo"],
-            "nosotros_eyebrow": self.nosotros_eyebrow or d["nosotros_eyebrow"],
-            "nosotros_titulo": self.nosotros_titulo or d["nosotros_titulo"],
-            "nosotros_texto": self.nosotros_texto or d["nosotros_texto"],
+            "unete_eyebrow": txt("unete_eyebrow"),
+            "unete_titulo": txt("unete_titulo"),
+            "unete_texto": txt("unete_texto"),
+            "hero_eyebrow": txt("hero_eyebrow"),
+            "hero_titulo": txt("hero_titulo"),
+            "hero_texto": txt("hero_texto"),
+            "desarrollos_eyebrow": txt("desarrollos_eyebrow"),
+            "desarrollos_titulo": txt("desarrollos_titulo"),
+            "entregados_eyebrow": txt("entregados_eyebrow"),
+            "entregados_titulo": txt("entregados_titulo"),
+            "nosotros_eyebrow": txt("nosotros_eyebrow"),
+            "nosotros_titulo": txt("nosotros_titulo"),
+            "nosotros_texto": txt("nosotros_texto"),
             "nosotros_imagen": nosotros_img,
             "home_secciones": self.home_secciones,
+            # Página Nosotros
+            "nosotros_page_hero": self.asset_url(
+                self.nosotros_page_hero, d["static_nosotros_page_hero"]
+            ),
+            "nosotros_page_eyebrow": txt("nosotros_page_eyebrow"),
+            "nosotros_page_titulo": txt("nosotros_page_titulo"),
+            "nosotros_historia": txt("nosotros_historia"),
+            "nosotros_mision": txt("nosotros_mision"),
+            "nosotros_vision": txt("nosotros_vision"),
+            "nosotros_cifras": self.nosotros_cifras,
+            "nosotros_compromisos_titulo": txt("nosotros_compromisos_titulo"),
+            "nosotros_equipo_eyebrow": txt("nosotros_equipo_eyebrow"),
+            "nosotros_equipo_titulo": txt("nosotros_equipo_titulo"),
+            "nosotros_testimonios_titulo": txt("nosotros_testimonios_titulo"),
+            "nosotros_cta_titulo": txt("nosotros_cta_titulo"),
+            "nosotros_secciones": self.nosotros_secciones,
+            "equipo_fotos": equipo_urls,
+            "equipo_fotos_refs": self.equipo_fotos_refs,
+            # Página Únete
+            "unete_page_hero": self.asset_url(self.unete_page_hero, d["static_unete_page_hero"]),
+            "unete_page_subtitulo": txt("unete_page_subtitulo"),
+            "unete_vacantes_titulo": txt("unete_vacantes_titulo"),
+            "unete_cv_titulo": txt("unete_cv_titulo"),
+            "unete_cv_texto": txt("unete_cv_texto"),
+            "unete_page_secciones": self.unete_page_secciones,
         }
 
     @classmethod
