@@ -97,50 +97,61 @@
     {% endif %}
   </div>
 
-  <!-- COTIZADOR -->
+  <!-- COTIZADOR / CTA -->
   <aside class="lg:sticky lg:top-28 h-fit" data-aos="fade-left">
     <div class="liquid-glass liquid-glass-gold rounded-2xl p-7">
-      <p class="uppercase tracking-[0.25em] text-gold text-xs mb-2">Cotizador</p>
-      <h3 class="font-display text-2xl mb-1">Simula tu inversión</h3>
-      <p class="text-cream/60 text-sm mb-6">Precio desde ${{ '{:,.0f}'.format(d.precio_desde) }} MXN</p>
-
-      <form data-cotizador data-precio="{{ d.precio_desde }}" data-enganche-pct="{{ d.enganche_min_pct }}" class="space-y-6" onsubmit="return false;">
-        <div>
-          <div class="flex justify-between text-sm mb-2">
-            <span class="text-cream/70">Enganche</span>
-            <span data-out-enganche class="text-gold font-semibold"></span>
-          </div>
-          <input type="range" min="{{ d.enganche_min_pct }}" max="60" step="1" value="{{ d.enganche_min_pct }}" data-enganche-pct class="w-full accent-[#c9a962]">
-        </div>
-
-        <div>
-          <label class="block text-sm text-cream/70 mb-2">Plazo de financiamiento</label>
-          <select data-plazo class="w-full rounded-lg bg-ink border border-white/15 px-4 py-2.5 text-cream focus:border-gold focus:outline-none">
-            {% for p in d.plazos %}
-              <option value="{{ p.meses }}" data-interes="{{ p.interes_anual_pct }}">
-                {{ p.meses }} meses{% if p.interes_anual_pct %} · {{ p.interes_anual_pct }}% anual{% else %} · sin interés{% endif %}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div class="border-t border-white/10 pt-5 space-y-3 text-sm">
-          <div class="flex justify-between"><span class="text-cream/60">Monto de enganche</span><span data-out-enganche-monto class="font-semibold"></span></div>
-          <div class="flex justify-between"><span class="text-cream/60">Restante a financiar</span><span data-out-restante class="font-semibold"></span></div>
-          <div class="flex justify-between"><span class="text-cream/60">Tasa del plazo</span><span data-out-tasa class="font-semibold"></span></div>
-          <div class="flex justify-between"><span class="text-cream/60">Total estimado a pagar</span><span data-out-total class="font-semibold"></span></div>
-          <div class="flex justify-between items-baseline pt-2 border-t border-white/10">
-            <span class="text-cream/70">Mensualidad estimada</span>
-            <span data-out-mensualidad class="text-gold text-2xl font-display"></span>
-          </div>
-        </div>
-        <p class="text-[11px] text-cream/40 leading-relaxed">
-          Cálculo referencial: sin interés divide el saldo entre los meses; con interés usa cuota fija
-          (amortización francesa). Sujeto a términos vigentes al momento de la firma.
+      {% if d.categoria == 'entregado' %}
+        <p class="uppercase tracking-[0.25em] text-gold text-xs mb-2">Proyecto entregado</p>
+        <h3 class="font-display text-2xl mb-3">Ya entregamos este desarrollo</h3>
+        <p class="text-cream/60 text-sm mb-6">
+          El cotizador no aplica en proyectos entregados. Si te interesa conocer opciones disponibles
+          o recibir asesoría, nuestro equipo te orienta.
         </p>
-      </form>
+        <a href="{{ url_for('main.desarrollos') }}#disponibles" class="btn-shimmer mb-3 block text-center rounded-full bg-gold px-6 py-3.5 text-ink font-semibold hover:bg-goldlight transition-colors">Ver proyectos disponibles</a>
+        <a href="{{ url_for('main.contacto', desarrollo=d.nombre) }}" class="block text-center rounded-full border border-white/25 px-6 py-3.5 hover:border-gold hover:text-gold transition-colors">Hablar con un asesor</a>
+      {% else %}
+        <p class="uppercase tracking-[0.25em] text-gold text-xs mb-2">Cotizador</p>
+        <h3 class="font-display text-2xl mb-1">Simula tu inversión</h3>
+        <p class="text-cream/60 text-sm mb-6">Precio desde ${{ '{:,.0f}'.format(d.precio_desde) }} MXN</p>
 
-      <a href="{{ url_for('main.contacto', desarrollo=d.nombre) }}" class="btn-shimmer mt-6 block text-center rounded-full bg-gold px-6 py-3.5 text-ink font-semibold hover:bg-goldlight transition-colors">Quiero que me contacten</a>
+        <form data-cotizador data-precio="{{ d.precio_desde }}" data-enganche-pct="{{ d.enganche_min_pct }}" class="space-y-6" onsubmit="return false;">
+          <div>
+            <div class="flex justify-between text-sm mb-2">
+              <span class="text-cream/70">Enganche</span>
+              <span data-out-enganche class="text-gold font-semibold"></span>
+            </div>
+            <input type="range" min="{{ d.enganche_min_pct }}" max="60" step="1" value="{{ d.enganche_min_pct }}" data-enganche-pct class="w-full accent-[#c9a962]">
+          </div>
+
+          <div>
+            <label class="block text-sm text-cream/70 mb-2">Plazo de financiamiento</label>
+            <select data-plazo class="w-full rounded-lg bg-ink border border-white/15 px-4 py-2.5 text-cream focus:border-gold focus:outline-none">
+              {% for p in d.plazos %}
+                <option value="{{ p.meses }}" data-interes="{{ p.interes_anual_pct }}">
+                  {{ p.meses }} meses{% if p.interes_anual_pct %} · {{ p.interes_anual_pct }}% anual{% else %} · sin interés{% endif %}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="border-t border-white/10 pt-5 space-y-3 text-sm">
+            <div class="flex justify-between"><span class="text-cream/60">Monto de enganche</span><span data-out-enganche-monto class="font-semibold"></span></div>
+            <div class="flex justify-between"><span class="text-cream/60">Restante a financiar</span><span data-out-restante class="font-semibold"></span></div>
+            <div class="flex justify-between"><span class="text-cream/60">Tasa del plazo</span><span data-out-tasa class="font-semibold"></span></div>
+            <div class="flex justify-between"><span class="text-cream/60">Total estimado a pagar</span><span data-out-total class="font-semibold"></span></div>
+            <div class="flex justify-between items-baseline pt-2 border-t border-white/10">
+              <span class="text-cream/70">Mensualidad estimada</span>
+              <span data-out-mensualidad class="text-gold text-2xl font-display"></span>
+            </div>
+          </div>
+          <p class="text-[11px] text-cream/40 leading-relaxed">
+            Cálculo referencial: sin interés divide el saldo entre los meses; con interés usa cuota fija
+            (amortización francesa). Sujeto a términos vigentes al momento de la firma.
+          </p>
+        </form>
+
+        <a href="{{ url_for('main.contacto', desarrollo=d.nombre) }}" class="btn-shimmer mt-6 block text-center rounded-full bg-gold px-6 py-3.5 text-ink font-semibold hover:bg-goldlight transition-colors">Quiero que me contacten</a>
+      {% endif %}
     </div>
   </aside>
 </section>

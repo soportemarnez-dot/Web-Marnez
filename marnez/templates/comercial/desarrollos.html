@@ -6,7 +6,7 @@
   <div>
     <a href="{{ url_for('comercial.panel') }}" class="text-gold text-sm hover:text-goldlight">&larr; Panel</a>
     <h1 class="font-display text-4xl mt-3">Desarrollos</h1>
-    <p class="text-cream/50 text-sm mt-2">Mueve cada proyecto entre disponibles y entregados.</p>
+    <p class="text-cream/50 text-sm mt-2">Activa u oculta proyectos, o muévelos entre disponibles y entregados.</p>
   </div>
   <a href="{{ url_for('comercial.desarrollo_nuevo') }}" class="rounded-full bg-gold px-5 py-2.5 text-sm text-ink font-semibold hover:bg-goldlight transition-colors">+ Nuevo desarrollo</a>
 </section>
@@ -29,25 +29,41 @@
           <tbody class="divide-y divide-white/10">
             {% set rows = desarrollos | selectattr('categoria', 'equalto', cat_key) | list %}
             {% for d in rows %}
-              <tr class="hover:bg-white/5">
+              <tr class="hover:bg-white/5 {{ 'opacity-55' if not d.activo }}">
                 <td class="px-5 py-4 font-medium">{{ d.nombre }}</td>
                 <td class="px-5 py-4 text-cream/70">{{ d.estatus or '—' }}</td>
                 <td class="px-5 py-4">${{ '{:,.0f}'.format(d.precio_desde) }}</td>
-                <td class="px-5 py-4">{{ 'Activo' if d.activo else 'Oculto' }}</td>
+                <td class="px-5 py-4">
+                  {% if d.activo %}
+                    <span class="text-emerald-300/90">Activo</span>
+                  {% else %}
+                    <span class="text-cream/45">Oculto</span>
+                  {% endif %}
+                </td>
                 <td class="px-5 py-4 text-right space-x-2 whitespace-nowrap">
-                  <a href="{{ url_for('main.desarrollo_detalle', slug=d.slug) }}" target="_blank" class="text-cream/60 hover:text-gold">Ver</a>
+                  {% if d.activo %}
+                    <a href="{{ url_for('main.desarrollo_detalle', slug=d.slug) }}" target="_blank" class="text-cream/60 hover:text-gold">Ver</a>
+                  {% endif %}
                   <a href="{{ url_for('comercial.desarrollo_editar', desarrollo_id=d.id) }}" class="text-cream/70 hover:text-gold">Editar</a>
+                  <form method="post" action="{{ url_for('comercial.desarrollo_activo', desarrollo_id=d.id) }}" class="inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% if d.activo %}
+                      <button type="submit" class="text-amber-200/90 hover:text-amber-100">Desactivar</button>
+                    {% else %}
+                      <button type="submit" class="text-emerald-200/90 hover:text-emerald-100">Activar</button>
+                    {% endif %}
+                  </form>
                   {% if cat_key == 'disponible' %}
                     <form method="post" action="{{ url_for('comercial.desarrollo_categoria', desarrollo_id=d.id) }}" class="inline">
                       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                       <input type="hidden" name="categoria" value="entregado">
-                      <button type="submit" class="text-amber-200/90 hover:text-amber-100">→ Entregados</button>
+                      <button type="submit" class="text-cream/55 hover:text-gold">→ Entregados</button>
                     </form>
                   {% else %}
                     <form method="post" action="{{ url_for('comercial.desarrollo_categoria', desarrollo_id=d.id) }}" class="inline">
                       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                       <input type="hidden" name="categoria" value="disponible">
-                      <button type="submit" class="text-emerald-200/90 hover:text-emerald-100">→ Disponibles</button>
+                      <button type="submit" class="text-cream/55 hover:text-gold">→ Disponibles</button>
                     </form>
                   {% endif %}
                   <form method="post" action="{{ url_for('comercial.desarrollo_eliminar', desarrollo_id=d.id) }}" class="inline" onsubmit="return confirm('¿Eliminar este desarrollo?');">

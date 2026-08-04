@@ -360,7 +360,7 @@ class AjustesDiseno(db.Model):
 
     HOME_SECCIONES_DEFAULT = [
         {"id": "hero", "label": "Hero principal", "visible": True, "orden": 0},
-        {"id": "certificaciones", "label": "Certificaciones", "visible": True, "orden": 1},
+        {"id": "certificaciones", "label": "Cifras de la empresa", "visible": True, "orden": 1},
         {"id": "desarrollos", "label": "Proyectos disponibles", "visible": True, "orden": 2},
         {"id": "entregados", "label": "Proyectos entregados", "visible": True, "orden": 3},
         {"id": "nosotros", "label": "Nosotros (resumen)", "visible": True, "orden": 4},
@@ -411,7 +411,7 @@ class AjustesDiseno(db.Model):
             "img/hero/hero-night.jpg",
             "img/hero/hero-concept-1.jpg",
             "img/hero/hero-concept-2.jpg",
-            "img/desarrollos/costella/costella-01.jpg",
+            "img/desarrollos/antal/antal-06.jpg",
         ],
     }
 

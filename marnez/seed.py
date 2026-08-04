@@ -256,7 +256,7 @@ def seed_content_if_empty(app) -> None:
                 mapa_query=d.get("mapa_query"),
                 mapa_img=d.get("mapa_img"),
                 orden=idx,
-                activo=True,
+                activo=bool(d.get("activo", True)),
                 categoria=(
                     "entregado"
                     if "entregado" in (d.get("estatus") or "").lower()

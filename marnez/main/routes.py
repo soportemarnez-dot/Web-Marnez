@@ -13,7 +13,7 @@ from pathlib import Path
 
 from ..extensions import db
 from ..models import Lead, AjustesComercial
-from ..data import TESTIMONIOS, CERTIFICACIONES, EQUIPO_FOTOS
+from ..data import TESTIMONIOS, CERTIFICACIONES, EMPRESA_CIFRAS, EQUIPO_FOTOS
 from ..content import (
     list_desarrollos_activos,
     list_desarrollos_disponibles,
@@ -35,7 +35,7 @@ def index():
         disponibles=list_desarrollos_disponibles()[:3],
         entregados=list_desarrollos_entregados()[:3],
         testimonios=TESTIMONIOS,
-        certificaciones=CERTIFICACIONES,
+        empresa_cifras=EMPRESA_CIFRAS,
         posts=list_blog_posts(limit=3),
     )
 

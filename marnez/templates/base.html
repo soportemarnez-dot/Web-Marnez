@@ -9,10 +9,10 @@
 <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/icons/favicon.png') }}">
 
 <script>
-  // Aplica el tema guardado ANTES de pintar, para evitar parpadeo (FOUC).
+  // Tema: modo día por defecto. Solo usa nocturno si el usuario lo eligió antes.
   (function () {
     var saved = localStorage.getItem('marnez_theme');
-    if (saved === 'light') document.documentElement.classList.add('light');
+    if (saved !== 'dark') document.documentElement.classList.add('light');
   })();
 </script>
 
@@ -41,7 +41,7 @@
   }
 </script>
 <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=10">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=11">
 <style id="marnez-diseno">
   :root {
     --c-ink: {{ diseno.ink }};
@@ -102,7 +102,7 @@
 
 <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
 <script>AOS.init({ duration: 700, once: true, offset: 60 });</script>
-<script src="{{ url_for('static', filename='js/main.js') }}?v=10"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}?v=11"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

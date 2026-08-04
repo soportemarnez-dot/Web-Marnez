@@ -331,6 +331,23 @@ def desarrollo_categoria(desarrollo_id):
     return redirect(url_for("comercial.desarrollos"))
 
 
+@comercial_bp.route("/desarrollos/<int:desarrollo_id>/activo", methods=["POST"])
+@require_rol(ROL_COMERCIAL)
+def desarrollo_activo(desarrollo_id):
+    """Activa u oculta un desarrollo en el sitio público."""
+    d = db.session.get(Desarrollo, desarrollo_id)
+    if d is None:
+        from flask import abort
+
+        abort(404)
+    d.activo = not bool(d.activo)
+    db.session.commit()
+    invalidate_content_cache()
+    estado = "visible en el sitio" if d.activo else "oculto (no aparece en el sitio)"
+    flash(f"«{d.nombre}» ahora está {estado}.", "success")
+    return redirect(url_for("comercial.desarrollos"))
+
+
 @comercial_bp.route("/desarrollos/nuevo", methods=["GET", "POST"])
 @require_rol(ROL_COMERCIAL)
 def desarrollo_nuevo():

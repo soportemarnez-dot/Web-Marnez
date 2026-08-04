@@ -1,7 +1,7 @@
 """
 Contenido semilla: desarrollos, blog y testimonios.
 Los desarrollos y posts se migran a SQLite al arrancar (si la BD está vacía).
-TESTIMONIOS / CERTIFICACIONES / EQUIPO siguen siendo estáticos aquí.
+TESTIMONIOS / CERTIFICACIONES / EMPRESA_CIFRAS / EQUIPO siguen siendo estáticos aquí.
 """
 
 DESARROLLOS = [
@@ -37,6 +37,7 @@ DESARROLLOS = [
         "video_youtube": "Xkwl8hI_CSc",
         "mapa_query": "Costella Telchac Residencial, Telchac Puerto, Yucatán",
         "mapa_img": "costella-mapa.jpg",
+        "activo": False,
     },
     {
         "slug": "gran-riviera",
@@ -182,7 +183,7 @@ TESTIMONIOS = [
         "nombre": "Karla Sugey Caballero Pérez",
         "iniciales": "KC",
         "detalle": "Cliente de Tarumá",
-        "texto": "Es una empresa con certeza jurídica e información clara y precisa.",
+        "texto": "Es una empresa con información clara, precisa y contratos con respaldo institucional.",
     },
     {
         "nombre": "Vicente Alfredo Martín Cab",
@@ -198,8 +199,19 @@ TESTIMONIOS = [
     },
 ]
 
+# Barra de cifras del inicio (datos duros de la empresa).
+EMPRESA_CIFRAS = [
+    {"valor": "+333,500", "texto": "m² vendidos"},
+    {"valor": "+30", "texto": "Colaboradores"},
+    {"valor": "+1,150", "texto": "Clientes"},
+    {"valor": "4", "texto": "Proyectos entregados"},
+    {"valor": "+60", "texto": "Alianzas comerciales"},
+    {"valor": "6", "texto": "Años en el mercado"},
+    {"valor": "INSEJUPY", "texto": "Contratos adheridos"},
+]
+
 CERTIFICACIONES = [
-    {"texto": "Protección jurídica patrimonial", "logo": None},
+    {"texto": "Contratos adheridos a INSEJUPY", "logo": None},
     {"texto": "Escrituración inmediata", "logo": "icons/escrituracion.png"},
     {"texto": "Programa de referidos", "logo": None},
     {"texto": "Cumplimiento normativo PROFECO", "logo": None},
@@ -231,14 +243,14 @@ BLOG_POSTS = [
     },
     {
         "slug": "terrenos-con-club-de-playa",
-        "titulo": "Terrenos en Yucatán con club de playa incluido",
-        "resumen": "Descubre Costella en Telchac y vive tu inversión desde el primer día.",
+        "titulo": "Terrenos en Yucatán cerca de la playa",
+        "resumen": "Conoce opciones residenciales con excelente ubicación y plusvalía en el oriente de Yucatán.",
         "cuerpo": (
-            "Costella integra un club de playa exclusivo para residentes desde la primera etapa de "
-            "entrega. Muelle, alberca, zona de grill y restaurante forman parte de la experiencia de "
-            "vivir frente al mar en Telchac, Yucatán."
+            "Invertir cerca de la costa yucateca combina plusvalía y estilo de vida. En Marnez "
+            "acompañamos cada etapa del proceso: desde la visita al desarrollo hasta la escrituración, "
+            "con contratos adheridos a INSEJUPY y cumplimiento normativo."
         ),
-        "imagen": "costella-01.jpg",
+        "imagen": "gran-riviera-01.jpg",
     },
 ]
 
